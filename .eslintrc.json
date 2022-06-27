@@ -1,0 +1,77 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:vue/essential",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "parser": "@typescript-eslint/parser",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "vue",
+    "@typescript-eslint",
+    "prettier"
+  ],
+  "rules": {
+    "indent": "off",
+    "@typescript-eslint/indent" : [
+      "error",
+      2,
+      { 
+        "MemberExpression": 1,
+        "FunctionExpression": {"body": 1, "parameters": 2},
+        "ObjectExpression": "first" 
+      }
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "no-console": ["warn"],
+    "curly": 2,
+    "@typescript-eslint/no-unused-vars": "error",
+    "no-unused-vars": "off",
+    "no-undef": "error",
+    "no-return-assign": "error",
+    "no-unexpected-multiline": "error",
+    "max-len": ["error", { "code": 100}],
+    "no-unused-expressions": "error",
+    "no-loop-func": "error",
+    "no-eq-null": "error",
+    "no-trailing-spaces": "error",
+    "semi": "error",
+    "no-cond-assign": "error",
+    "function-paren-newline": ["error", "consistent"],
+    "no-multiple-empty-lines": ["error", { "max": 2}],
+    "lines-between-class-members": ["error", "always"],
+    "line-comment-position": ["error", { "position": "above" }],
+    "for-direction": "error",
+    "array-bracket-spacing": ["error", "always"],
+    "arrow-parens": ["error", "always"],
+    "brace-style": ["error", "1tbs"],
+    "comma-spacing": ["error"],
+    "no-mixed-spaces-and-tabs": "error",
+    "no-var": ["error"],
+    "keyword-spacing": ["error", { "before": true, "after": true }],
+    "key-spacing": ["error", { "beforeColon": true, "afterColon": true}],
+    "function-call-argument-newline": ["error", "consistent"],
+    "keyword-spacing": ["error", { "before": true, "after": true }],
+    "space-infix-ops": ["error"]
+  }
+}
