@@ -2,7 +2,7 @@ import mitt, {Emitter} from "mitt";
 import { BaseNode } from "./nodes/BaseNode";
 import { ShaderGraphRenderer } from "./ShaderGraphRenderer";
 import { Scene } from "./Scene";
-import { LinkElement } from "./renderer/Link";
+import { Link, LinkElement } from "./renderer/Link";
 
 export interface PointerPosition {
   x: number;
@@ -20,6 +20,8 @@ export type Events = {
   resizeCanvas : undefined;
   resizeGraph: undefined;
   repositionLinks: undefined;
+  cancelLink: undefined;
+  addLink: Link;
 };
 
 export class Manager {

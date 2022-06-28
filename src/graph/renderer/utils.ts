@@ -5,10 +5,8 @@ export const convertPixelToUnit = (
 ): [number, number] => {
   const width = viewBoxSplit[2];
   const height = viewBoxSplit[3];
-  console.log({ratio : width / height, width, height});
   const scaledX = width / canvasWidth * x;
   const scaledY = height / canvasHeight * y;
-  console.log({scaledX, x, canvasWidth, width});
   return [ scaledX + viewBoxSplit[0], scaledY + viewBoxSplit[1] ];
 };
 

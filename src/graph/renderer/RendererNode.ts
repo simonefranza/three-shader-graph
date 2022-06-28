@@ -199,7 +199,7 @@ export class RendererNode {
     this.state = state;
   }
 
-  createOutgoingLink(link: HTMLElement, output: BaseOutput) {
+  createOutgoingLink(link: HTMLElement, output: BaseOutput) : Link {
     console.log("OutgoingLink");
     const bounding = link.getBoundingClientRect();
     const startPos = <CanvasPosition>{
@@ -207,7 +207,7 @@ export class RendererNode {
       y : bounding.top + bounding.height / 2
     };
     const endPos = <CanvasPosition>{ x : this.pointerPos.x, y : this.pointerPos.y };
-    new Link(
+    const newLink = new Link(
       this.canvas,
       this.emitter,
       startPos,
@@ -217,9 +217,10 @@ export class RendererNode {
       undefined,
       this
     );
+    return newLink;
   }
 
-  createIncomingLink(link: HTMLElement, input: BaseInput) {
+  createIncomingLink(link: HTMLElement, input: BaseInput) : Link {
     console.log("Incoming");
     const bounding = link.getBoundingClientRect();
     const startPos = <CanvasPosition>{ x : this.pointerPos.x, y : this.pointerPos.y };
@@ -227,7 +228,7 @@ export class RendererNode {
       x : bounding.left + bounding.width / 2,
       y : bounding.top + bounding.height / 2
     };
-    new Link(
+    const newLink = new Link(
       this.canvas,
       this.emitter,
       startPos,
@@ -238,6 +239,7 @@ export class RendererNode {
       undefined,
       this
     );
+    return newLink;
   }
 
   removeIncomingLink(link: Link) {
@@ -249,11 +251,15 @@ export class RendererNode {
   }
 
   addIncomingLink(link: Link, input: BaseInput) {
+    console.log("addIncoming", link);
     this.incomingLinks.push({ link, input });
+    this.emitter.emit('addLink', link);
   }
 
   addOutgoingLink(link: Link, output: BaseOutput) {
+    console.log("addOutgoing", link);
     this.outgoingLinks.push({ link, output });
+    this.emitter.emit('addLink', link);
   }
 
   fixLink(obj: LinkElement) {

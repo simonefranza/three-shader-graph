@@ -1,4 +1,4 @@
-import {Emitter} from "mitt";
+import { Emitter } from "mitt";
 import { Events } from "../Manager";
 import { BaseOutput } from "../nodes/BaseOutput";
 import { BaseInput } from "../nodes/BaseInput";
@@ -7,7 +7,7 @@ import * as Utils from "./utils";
 
 enum State {
   Initial,
-  Fixed
+  Fixed,
 }
 
 export class Link {
@@ -15,47 +15,47 @@ export class Link {
 
   emitter: Emitter<Events>;
 
-  startElement ?: HTMLElement;
+  startElement?: HTMLElement;
 
-  startOutput ?: BaseOutput;
+  startOutput?: BaseOutput;
 
-  startPosition : CanvasPosition;
+  startPosition: CanvasPosition;
 
-  startNode ?: RendererNode;
+  startNode?: RendererNode;
 
-  endElement ?: HTMLElement;
+  endElement?: HTMLElement;
 
-  endInput ?: BaseInput;
+  endInput?: BaseInput;
 
   endPosition: CanvasPosition;
 
-  endNode ?: RendererNode;
+  endNode?: RendererNode;
 
   path: SVGPathElement;
 
   state: State;
 
-  pointerMoveHandler : (e : PointerEvent) => void;
+  pointerMoveHandler: (e: PointerEvent) => void;
 
-  pointerUpHandler : () => void;
+  pointerUpHandler: () => void;
 
-  fixLinkHandler : (obj: LinkElement) => void;
+  fixLinkHandler: (obj: LinkElement) => void;
 
   constructor(
       canvas: SVGForeignObjectElement,
       emitter: Emitter<Events>,
-      startPosition : CanvasPosition,
-      endPosition : CanvasPosition,
-      inOutput : BaseInput | BaseOutput,
-      startElement? : HTMLElement,
-      endElement? : HTMLElement,
-      startNode? : RendererNode,
-      endNode? : RendererNode,
+      startPosition: CanvasPosition,
+      endPosition: CanvasPosition,
+      inOutput: BaseInput | BaseOutput,
+      startElement?: HTMLElement,
+      endElement?: HTMLElement,
+      startNode?: RendererNode,
+      endNode?: RendererNode
   ) {
     this.canvas = canvas;
     this.emitter = emitter;
-    this.startPosition = {x : startPosition.x, y : startPosition.y};
-    this.endPosition = {x : endPosition.x, y : endPosition.y};
+    this.startPosition = { x : startPosition.x, y : startPosition.y };
+    this.endPosition = { x : endPosition.x, y : endPosition.y };
     console.log("end", this.endPosition);
     if (startElement !== undefined && startElement !== null) {
       this.startElement = startElement;
@@ -78,7 +78,7 @@ export class Link {
     this.updateShape();
     this.state = State.Initial;
 
-    this.pointerMoveHandler = (e : PointerEvent) => this.handlePointerMove(e);
+    this.pointerMoveHandler = (e: PointerEvent) => this.handlePointerMove(e);
     addEventListener("pointermove", this.pointerMoveHandler);
 
     this.pointerUpHandler = () => this.handlePointerUp();
@@ -90,50 +90,58 @@ export class Link {
     this.emitter.on("repositionLinks", () => this.moveLink());
   }
 
-  createLine() : SVGPathElement {
+  createLine(): SVGPathElement {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("stroke", "red");
     path.setAttribute("stroke-width", "3px");
     path.setAttribute("fill", "transparent");
     if (this.canvas.firstChild !== null) {
       this.canvas.insertBefore(path, this.canvas.firstChild);
-    } else  {
+    } else {
       throw "[Link] Adding link with no nodes";
     }
     return path;
   }
 
-  setStartPosition(pos : CanvasPosition) {
+  setStartPosition(pos: CanvasPosition) {
     this.startPosition.x = pos.x;
     this.startPosition.y = pos.y;
     this.updateShape();
   }
 
-  setEndPosition(pos : CanvasPosition) {
+  setEndPosition(pos: CanvasPosition) {
     this.endPosition.x = pos.x;
     this.endPosition.y = pos.y;
     this.updateShape();
   }
 
-  updateShape(convertPositions ?: boolean) {
-    let [ start, end ] = [ {x : 0, y : 0}, {x : 0, y : 0} ];
+  updateShape(convertPositions?: boolean) {
+    let [ start, end ] = [
+      { x : 0, y : 0 },
+      { x : 0, y : 0 },
+    ];
     if (convertPositions === false) {
-      console.log("DAAAALSE");
       [ start, end ] = [ this.startPosition, this.endPosition ];
     } else {
-      [ start, end ] = this.convertCanvasPosition([ this.startPosition, this.endPosition ]);
+      [ start, end ] = this.convertCanvasPosition([
+        this.startPosition,
+        this.endPosition,
+      ]);
     }
     const midPoint = <CanvasPosition>{
       x : (start.x + end.x) / 2,
-      y : (start.y + end.y) / 2
+      y : (start.y + end.y) / 2,
     };
-    this.path.setAttribute("d", `M ${start.x} ${start.y}
+    this.path.setAttribute(
+      "d",
+      `M ${start.x} ${start.y}
       Q ${start.x + Math.abs(end.x - start.x) / 3}
         ${start.y}, ${midPoint.x} ${midPoint.y} 
-      T ${end.x} ${end.y}`);
+      T ${end.x} ${end.y}`
+    );
   }
 
-  handlePointerMove(e : PointerEvent) {
+  handlePointerMove(e: PointerEvent) {
     if (this.state !== State.Initial) {
       throw "[Link::handlePointerMove] state is not Initial";
     }
@@ -152,7 +160,19 @@ export class Link {
     if (this.state !== State.Initial) {
       throw "[Link::handlePointerMove] state is not Initial";
     }
+    this.emitter.emit("cancelLink");
     this.deleteElement();
+  }
+
+  detachEnd() {
+    this.endElement = undefined;
+    this.state = State.Initial;
+    addEventListener("pointermove", this.pointerMoveHandler);
+    addEventListener("pointerup", this.pointerUpHandler);
+    this.emitter.on("fixLink", this.fixLinkHandler);
+    // TODO unlink from node
+    this.updateShape();
+    console.log("detached");
   }
 
   deleteElement() {
@@ -241,13 +261,15 @@ export class Link {
     }
     const boundingStart = this.startElement.getBoundingClientRect();
     const boundingEnd = this.endElement.getBoundingClientRect();
-    const distances = this.convertCanvasDistances(
-      [ boundingStart.width / 2, boundingStart.height / 2,
-        boundingEnd.width / 2, boundingEnd.height / 2 ]
-    );
+    const distances = this.convertCanvasDistances([
+      boundingStart.width / 2,
+      boundingStart.height / 2,
+      boundingEnd.width / 2,
+      boundingEnd.height / 2,
+    ]);
     const positions = this.convertCanvasPosition([
-      {x : boundingStart.left, y : boundingStart.top},
-      {x : boundingEnd.left, y : boundingEnd.top}
+      { x : boundingStart.left, y : boundingStart.top },
+      { x : boundingEnd.left, y : boundingEnd.top },
     ]);
     this.startPosition.x = positions[0].x + distances[0];
     this.startPosition.y = positions[0].y + distances[1];
@@ -256,8 +278,8 @@ export class Link {
     this.updateShape(false);
   }
 
-  convertCanvasPosition(positions : CanvasPosition[]) : CanvasPosition[] {
-    const res : CanvasPosition[] = [];
+  convertCanvasPosition(positions: CanvasPosition[]): CanvasPosition[] {
+    const res: CanvasPosition[] = [];
     const viewBox = this.canvas.getAttribute("viewBox");
     if (viewBox === null) {
       throw "[RendererNodeMovement::handlePointerMoveInitial] viewBox is null";
@@ -272,12 +294,12 @@ export class Link {
         pos.x,
         pos.y
       );
-      res.push({x, y});
+      res.push({ x, y });
     });
     return [ ...res ];
   }
 
-  convertCanvasDistances(distances : number[]) : number[] {
+  convertCanvasDistances(distances: number[]): number[] {
     const viewBox = this.canvas.getAttribute("viewBox");
     if (viewBox === null) {
       throw "[RendererNodeMovement::handlePointerMoveInitial] viewBox is null";
@@ -297,12 +319,12 @@ export class Link {
 export interface CanvasPosition {
   x: number;
   y: number;
-};
+}
 
 export interface LinkElement {
   startElement?: HTMLElement;
   startNode?: RendererNode;
-  startOutput ?: BaseOutput;
+  startOutput?: BaseOutput;
   endElement?: HTMLElement;
   endNode?: RendererNode;
   endInput?: BaseInput;

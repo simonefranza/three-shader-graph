@@ -5,7 +5,9 @@
   },
   "extends": [
     "eslint:recommended",
+    "@vue/eslint-config-typescript",
     "plugin:vue/essential",
+    "plugin:vue/vue3-essential",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier"
@@ -16,6 +18,7 @@
     "sourceType": "module"
   },
   "plugins": [
+    "@rushstack/eslint-patch/modern-module-resolution",
     "vue",
     "@typescript-eslint",
     "prettier"

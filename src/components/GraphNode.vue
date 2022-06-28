@@ -10,6 +10,7 @@
         <output-component
           :output="output"
           :renderer="renderer"
+          :emitter="emitter"
         ></output-component>
       </div>
       <div
