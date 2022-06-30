@@ -296,7 +296,7 @@ float fbm(
     const float ${octaveIntVar} = ${super.formatValue(Math.floor(detailValue.value))};
     const float ${octaveFracVar} = ${super.formatValue(detailValue.value % 1)};
     const float ${persistanceVar} = ${super.formatValue(roughnessValue.value)};
-    const float ${distortionVar} = ${super.formatValue(distortionValue.value)};
+    const float ${distortionVar} = ${super.formatValue(distortionValue.value / 10)};
 
     // Derived from https://thebookofshaders.com/13/
     vec3 ${qVar} = vec3(

@@ -3,8 +3,10 @@
     :class="['shader-node-output-link', output.getType()]"
     @pointerdown="(e) => handlePointerDown(e, output)"
     @pointerup="(e) => handlePointerUp(e)"
+    data-state="open"
+    ref="outputEl"
   ></div>
-  <span>{{output.getName()}}</span>
+  <span>{{state}} - {{output.getName()}}</span>
 </template>
 
 <script lang="ts">
@@ -27,7 +29,8 @@ export default defineComponent({
       state : State.Open,
       link : null as null | Link,
       addLinkRoutine : (_ : Link) => {},
-      cancelLinkRoutine : () => {},
+      observerRoutine: (_ : MutationRecord[], __ : MutationObserver) => {},
+      observer : null as null | MutationObserver,
     };
   },
   props: {
@@ -61,10 +64,9 @@ export default defineComponent({
       }
     },
     handlePointerDownOpen(e : PointerEvent) {
-      this.link = this.renderer.createOutgoingLink(<HTMLElement>e.target, this.output);
-      this.state = State.Busy;
       this.emitter.on("addLink", this.addLinkRoutine);
-      this.emitter.on("cancelLink", this.cancelLinkRoutine);
+      this.link = this.renderer.createOutgoingLink(<HTMLElement>e.target, this.output);
+      //this.state = State.Busy;
     },
     handlePointerUp(e : PointerEvent) {
       switch(this.state) {
@@ -72,7 +74,6 @@ export default defineComponent({
           this.handlePointerUpOpen(e);
           break;
         case State.Busy:
-          this.handlePointerUpBusy();
           break;
         case State.Linked:
           break;
@@ -88,28 +89,58 @@ export default defineComponent({
         startOutput: this.output
       });
     },
-    handlePointerUpBusy() {
-      this.state = State.Open;
-    },
     addLink(link : Link) {
       console.log("linked");
-      this.state = State.Linked;
-      this.removeListeners();
+      //this.state = State.Linked;
       this.link = link;
-    },
-    cancelLink() {
-      console.log("cancelled");
-      this.state = State.Open;
-      this.removeListeners();
     },
     removeListeners() {
       this.emitter.off("addLink", this.addLinkRoutine);
-      this.emitter.off("cancelLink", this.cancelLinkRoutine);
+    },
+    observerCallback(mutationList : MutationRecord[], observer : MutationObserver) {
+      for(const mutation of mutationList) {
+        if (!(mutation.type === 'attributes' && typeof mutation.attributeName === "string")) {
+          continue;
+        }
+        const state = (<HTMLElement>this.$refs.outputEl).getAttribute(mutation.attributeName);
+        switch(state) {
+            case "open":
+              console.log("[OutputComponent] new state open");
+              this.setStateOpen();
+              break;
+            case "busy":
+              console.log("[OutputComponent] new state busy");
+              this.setStateBusy();
+              break;
+            case "linked":
+              console.log("[OutputComponent] new state linked");
+              this.setStateLinked();
+              break;
+            default:
+             throw "[InputComponent] Unknown data-state: " + state;
+        }
+      }
+    },
+    setStateOpen() {
+      this.state = State.Open;
+      this.removeListeners();
+    },
+    setStateBusy() {
+      this.state = State.Busy;
+    },
+    setStateLinked() {
+      this.state = State.Linked;
+      this.removeListeners();
     },
   },
   mounted() {
     this.addLinkRoutine = (link : Link) => this.addLink(link);
-    this.cancelLinkRoutine = () => this.cancelLink();
+    const targetNode = <HTMLElement>this.$refs.outputEl;
+    this.observerRoutine = 
+      (record : MutationRecord[], observer : MutationObserver) => 
+      this.observerCallback(record, observer);
+    this.observer = new MutationObserver(this.observerCallback);
+    this.observer.observe(targetNode, { attributes: true});
   },
 })
 </script>

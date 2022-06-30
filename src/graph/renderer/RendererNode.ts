@@ -247,6 +247,7 @@ export class RendererNode {
   }
 
   removeOutgoingLink(link: Link) {
+    console.log(this.svgNode);
     this.outgoingLinks = this.outgoingLinks.filter(({ link : linkEl }) => linkEl !== link);
   }
 

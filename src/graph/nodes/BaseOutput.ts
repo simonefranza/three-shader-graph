@@ -61,7 +61,6 @@ export class BaseOutput {
   dropConnection(destination : BaseInput) {
     this.#connections.inputList =
       this.#connections.inputList.filter((connection) => connection !== destination);
-    destination.dropConnection();
   }
 
 }

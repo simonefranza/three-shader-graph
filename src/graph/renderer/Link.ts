@@ -10,6 +10,12 @@ enum State {
   Fixed,
 }
 
+const DOMState = {
+  Open : "open",
+  Busy : "busy",
+  Linked : "linked",
+}
+
 export class Link {
   canvas: SVGForeignObjectElement;
 
@@ -59,9 +65,11 @@ export class Link {
     console.log("end", this.endPosition);
     if (startElement !== undefined && startElement !== null) {
       this.startElement = startElement;
+      this.startElement.setAttribute('data-state', DOMState.Busy);
     }
     if (endElement !== undefined && endElement !== null) {
       this.endElement = endElement;
+      this.endElement.setAttribute('data-state', DOMState.Busy);
     }
     if (inOutput instanceof BaseOutput) {
       this.startOutput = inOutput;
@@ -165,6 +173,10 @@ export class Link {
   }
 
   detachEnd() {
+    if (this.endElement === undefined) {
+      throw "[Link] Detaching end but endElement is undefined";
+    }
+    this.endElement.setAttribute("data-state", DOMState.Open);
     this.endElement = undefined;
     this.state = State.Initial;
     addEventListener("pointermove", this.pointerMoveHandler);
@@ -176,6 +188,7 @@ export class Link {
   }
 
   deleteElement() {
+    console.log("delete");
     this.path.remove();
     if (this.state === State.Initial) {
       removeEventListener("pointermove", this.pointerMoveHandler);
@@ -194,8 +207,14 @@ export class Link {
       } else if (this.endInput === undefined) {
         throw "[Link] startOutput is undefined, but state is fixed";
       }
-      this.startOutput.dropConnection(this.endInput);
+      this.endInput.dropConnection();
       this.emitter.emit("recompile");
+    }
+    if (this.startElement !== undefined) {
+      this.startElement.setAttribute('data-state', DOMState.Open);
+    }
+    if (this.endElement !== undefined) {
+      this.endElement.setAttribute('data-state', DOMState.Open);
     }
   }
 
@@ -240,6 +259,8 @@ export class Link {
     } else if (this.startElement === undefined) {
       throw "[Link] After fixing link, startElement is undefined";
     }
+    this.startElement.setAttribute('data-state', "linked");
+    this.endElement.setAttribute('data-state', "linked");
     console.log(this.endElement);
     this.startNode.addOutgoingLink(this, this.startOutput);
     this.endNode.addIncomingLink(this, this.endInput);

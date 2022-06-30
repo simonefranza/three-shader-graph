@@ -114,6 +114,10 @@ export class BaseInput {
   }
 
   dropConnection() {
+    if (this.#connected === null) {
+      throw "[BaseInput] Connected is null, cannot drop connection";
+    }
+    this.#connected.dropConnection(this);
     this.#connected = null;
     this.#value = <ShaderVariable> {
       name : this.#defaultValue.name,

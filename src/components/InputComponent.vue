@@ -3,8 +3,9 @@
     :class="['shader-node-input-link', input.getType()]"
     @pointerdown="(e) => handlePointerDown(e)"
     @pointerup="(e) => handlePointerUp(e)"
-  >{{state}}</div>
-  <span class="shader-node-input-label">{{input.getName()}}</span>
+    ref="inputEl"
+  ></div>
+  <span class="shader-node-input-label">{{state}} - {{input.getName()}}</span>
   <input class="shader-node-input-field" type="text" v-model="value"/>
 
 </template>
@@ -30,7 +31,8 @@ export default defineComponent({
       link: null as null | Link,
       state : State.Open,
       addLinkRoutine : (_ : Link) => {},
-      cancelLinkRoutine : () => {},
+      observerRoutine: (_ : MutationRecord[], __ : MutationObserver) => {},
+      observer : null as null | MutationObserver,
     };
   },
   props: {
@@ -65,9 +67,8 @@ export default defineComponent({
     handlePointerDownOpen(e : PointerEvent) {
       console.log("creatae");
       this.link = this.renderer.createIncomingLink(<HTMLElement>e.target, this.input);
-      this.state = State.Busy;
+      //this.state = State.Busy;
       this.emitter.on("addLink", this.addLinkRoutine);
-      this.emitter.on("cancelLink", this.cancelLinkRoutine);
     },
     handlePointerDownLinked() {
       console.log("link", this.link);
@@ -75,10 +76,11 @@ export default defineComponent({
         throw "[InputComponent] link is null";
       }
       // TODO detach model
-      this.state = State.Busy;
+      //this.state = State.Busy;
       this.link.detachEnd();
+      this.input.dropConnection();
+      this.emitter.emit("recompile");
       this.emitter.on("addLink", this.addLinkRoutine);
-      this.emitter.on("cancelLink", this.cancelLinkRoutine);
     },
     handlePointerUp(e : PointerEvent) {
       switch(this.state) {
@@ -86,7 +88,6 @@ export default defineComponent({
           this.handlePointerUpOpen(e);
           break;
         case State.Busy:
-          this.handlePointerUpBusy();
           break;
         case State.Linked:
           break;
@@ -103,29 +104,56 @@ export default defineComponent({
         endInput : this.input
       });
     },
-    handlePointerUpBusy() {
-      this.state = State.Open;
-    },
     addLink(link : Link) {
       console.log("linked");
-      this.state = State.Linked;
+      //this.state = State.Linked;
       this.link = link;
-      this.removeListeners();
-    },
-    cancelLink() {
-      console.log("cancelled");
-      this.state = State.Open;
-      this.removeListeners();
     },
     removeListeners() {
       this.emitter.off("addLink", this.addLinkRoutine);
-      this.emitter.off("cancelLink", this.cancelLinkRoutine);
+    },
+    observerCallback(mutationList : MutationRecord[], observer : MutationObserver) {
+      for(const mutation of mutationList) {
+        if (!(mutation.type === 'attributes' && typeof mutation.attributeName === "string")) {
+          continue;
+        }
+        const state = (<HTMLElement>this.$refs.inputEl).getAttribute(mutation.attributeName);
+        switch(state) {
+            case "open":
+              this.setStateOpen();
+              break;
+            case "busy":
+              this.setStateBusy();
+              break;
+            case "linked":
+              this.setStateLinked();
+              break;
+            default:
+             throw "[InputComponent] Unknown data-state: " + state;
+        }
+      }
+    },
+    setStateOpen() {
+      this.state = State.Open;
+      this.removeListeners();
+    },
+    setStateBusy() {
+      this.state = State.Busy;
+    },
+    setStateLinked() {
+      this.state = State.Linked;
+      this.removeListeners();
     },
   },
   mounted() {
     this.value = this.input.getValue().value;
     this.addLinkRoutine = (link : Link) => this.addLink(link);
-    this.cancelLinkRoutine = () => this.cancelLink();
+    const targetNode = <HTMLElement>this.$refs.inputEl;
+    this.observerRoutine = 
+      (record : MutationRecord[], observer : MutationObserver) => 
+      this.observerCallback(record, observer);
+    this.observer = new MutationObserver(this.observerCallback);
+    this.observer.observe(targetNode, { attributes: true});
   },
   watch: {
     value(_, oldVal) {

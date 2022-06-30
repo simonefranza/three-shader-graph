@@ -17,7 +17,7 @@ export class Scene {
 
   renderer: THREE.WebGLRenderer;
 
-  cube: THREE.Mesh;
+  mesh: THREE.Mesh;
 
   clock: THREE.Clock;
 
@@ -53,14 +53,14 @@ export class Scene {
 
     const [ vert, frag ] = [ "", "" ];
 
-    const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+    const geometry = new THREE.SphereGeometry( 1, 32, 16 );
     const material = new THREE.ShaderMaterial( {
       vertexShader : vert,
       fragmentShader : frag
     } );
-    this.cube = new THREE.Mesh( geometry, material );
-    this.cube.position.set(0, 0, 0);
-    this.scene.add( this.cube );
+    this.mesh = new THREE.Mesh( geometry, material );
+    this.mesh.position.set(0, 0, 0);
+    this.scene.add( this.mesh );
 
     this.clock = new THREE.Clock();
 
@@ -75,13 +75,13 @@ export class Scene {
     requestAnimationFrame(() => this.animate());
     this.renderer.render(this.scene, this.camera);
     const delta = this.clock.getDelta();
-    this.cube.rotation.z += delta * Math.PI / 6;
-    this.cube.rotation.x += delta * Math.PI / 6;
-    this.cube.rotation.y += delta * Math.PI / 6;
+    this.mesh.rotation.z += delta * Math.PI / 6;
+    this.mesh.rotation.x += delta * Math.PI / 6;
+    this.mesh.rotation.y += delta * Math.PI / 6;
   }
 
   updateShaders([ vertShader, fragShader ] : [string, string]) {
-    const material = <THREE.ShaderMaterial> this.cube.material;
+    const material = <THREE.ShaderMaterial> this.mesh.material;
     material.fragmentShader = fragShader;
     material.vertexShader = vertShader;
     material.needsUpdate = true;
