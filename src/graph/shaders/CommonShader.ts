@@ -1,5 +1,9 @@
 import { Vector3 } from "three";
 
+export interface FunctionsMap {
+  [key:string] : string
+}
+
 export abstract class CommonShader {
   #varyings: ShaderVariable[];
 
@@ -9,7 +13,7 @@ export abstract class CommonShader {
 
   #main: string[];
 
-  #functions: string[];
+  #functions: FunctionsMap;
 
   #in: ShaderVariable[];
 
@@ -22,7 +26,7 @@ export abstract class CommonShader {
     this.#attributes = [];
     this.#uniforms = [];
     this.#main = [];
-    this.#functions = [];
+    this.#functions = {};
     this.#in = [];
     this.#out = [];
     this.#variableList = [];
@@ -100,9 +104,9 @@ export abstract class CommonShader {
 
   compileFunctions() : string {
     let str = "";
-    this.#functions.forEach((line) => {
-      str += line + "\n";
-    });
+    for ( let funcName in this.#functions) {
+      str += this.#functions[funcName] + "\n";
+    }
     return str;
   }
 
@@ -111,18 +115,33 @@ export abstract class CommonShader {
   }
 
   addToIns(shaderVar : ShaderVariable) {
-    // TODO check if is already in list
+    if (this.#in.find((el) => el.name === shaderVar.name)) {
+      console.log(`[CommonShader] In variable ${shaderVar.name} is already present`);
+      return;
+    }
     this.#in.push(shaderVar);
   }
 
   addToOuts(shaderVar : ShaderVariable) {
-  // TODO check if is already in list
+    if (this.#out.find((el) => el.name === shaderVar.name)) {
+      console.log(`[CommonShader] Out variable ${shaderVar.name} is already present`);
+      return;
+    }
     this.#out.push(shaderVar);
   }
 
-  addToFunctions(functions: string) {
-  // TODO check if is already in list
-    this.#functions.push(functions);
+  addAllToFunctions(functionsObj : FunctionsMap) {
+    for (let functionName in functionsObj) {
+      this.addToFunctions(functionName, functionsObj[functionName]);
+    }
+  }
+
+  addToFunctions(functionName : string, functionString: string) {
+    if (functionName in this.#functions) {
+      console.log(`[CommonShader] Function ${functionName} is already present`);
+      return;
+    }
+    this.#functions[functionName] = functionString;
   }
 }
 

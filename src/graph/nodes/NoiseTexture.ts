@@ -3,13 +3,13 @@ import { BaseOutput } from "./BaseOutput";
 import { BaseInput, InputVariablesMap } from "./BaseInput";
 import { VertexShader } from "../shaders/VertexShader";
 import { FragmentShader } from "../shaders/FragmentShader";
-import { ShaderVariable } from "../shaders/CommonShader";
+import { ShaderVariable, FunctionsMap } from "../shaders/CommonShader";
 import { Vector3 } from "three";
 
 export class NoiseTexture extends BaseNode {
   inputVariables : InputVariablesMap;
 
-  noiseFunction : string;
+  noiseFunction : FunctionsMap;
 
   customNoiseFunction : string;
 
@@ -100,7 +100,8 @@ export class NoiseTexture extends BaseNode {
 
   return 0.;
 }`;
-    this.noiseFunction =
+    this.noiseFunction = {
+      "mod289(vec3)" : 
     `
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex 
@@ -116,22 +117,25 @@ export class NoiseTexture extends BaseNode {
 
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec4 mod289(vec4 x) {
+}`,
+      "mod289(vec4)" : 
+`vec4 mod289(vec4 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
+}`,
+      "permute" :
 
-vec4 permute(vec4 x) {
+`vec4 permute(vec4 x) {
      return mod289(((x*34.0)+10.0)*x);
-}
+}`,
+      "taylorInvSqrt(vec4)" :
 
-vec4 taylorInvSqrt(vec4 r)
+`vec4 taylorInvSqrt(vec4 r)
 {
   return 1.79284291400159 - 0.85373472095314 * r;
-}
+}`,
+      "snoise(vec3)" :
 
-float snoise(vec3 v)
+`float snoise(vec3 v)
   { 
   const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
@@ -209,9 +213,10 @@ float snoise(vec3 v)
   //
   // END
   //
-  
+`,
+      "fbm" :
 
-// Author: Simone Franza
+`// Author: Simone Franza
 // Inspired from https://thebookofshaders.com/13/
 float fbm(
     const float octaveInt,
@@ -243,8 +248,9 @@ float fbm(
 
   return noise;
 }
-`;
+`};
   }
+  //TODO add fbm functions ad hoc (https://www.shadertoy.com/view/lsl3RH) fbm1 fbm2 fbm3 ...
 
   compile(vert: VertexShader, frag : FragmentShader): [string, string] {
     const scaleValue : ShaderVariable =
@@ -288,7 +294,7 @@ float fbm(
     const qVar = frag.generateVariableID("nt_q_");
     const fVar = frag.generateVariableID("nt_f_");
     const finalColor = frag.generateVariableID("nt_color_");
-    frag.addToFunctions(this.noiseFunction);
+    frag.addAllToFunctions(this.noiseFunction);
     frag.addToMain(`
     vec3 ${stVar} = projPosition;
     // Scale the space in order to see the function
