@@ -1,5 +1,5 @@
 <template>
-  <div class="shader-node-number-input">
+  <div ref="inputContainer" class="shader-node-number-input">
     <span v-if="state === State.Init"
       :class="['shader-node-number-input-container', {'single-element' : isSmallRange}]"
     >
@@ -9,7 +9,7 @@
           class="shader-node-arrow-img"
         />
       </span>
-      <span class="shader-node-number-input-body"
+      <span :class="['shader-node-number-input-body', {'single-element' : isSmallRange}]"
       @pointerdown="handlePointerDown">
         <span class="shader-node-number-input-label">{{input.getName()}}</span>
         <span class="shader-node-number-input-value">{{value?.toFixed(3)}}</span>
@@ -23,8 +23,8 @@
     <span v-else
       class="shader-node-number-input-active"
       >
-      <input class="shader-node-number-input-field" type="text" v-model="value"/>
-      </span>
+      <input ref="inputField" class="shader-node-number-input-field" type="text" v-model="tempValue"/>
+    </span>
   </div>
 </template>
 
@@ -41,6 +41,7 @@ export default defineComponent({
   data() {
     return {
       value: null as null | number,
+      tempValue: "",
       maxValue : undefined as undefined | number,
       minValue : undefined as undefined | number,
       range: undefined as undefined | number,
@@ -80,8 +81,12 @@ export default defineComponent({
       document.addEventListener("pointerup", this.handlePointerUp);
     },
     handlePointerMove(e : PointerEvent) {
-      this.pointerMoved = true;
       let diffX = e.clientX - this.lastPositionX;
+      console.log(diffX);
+      if (Math.abs(diffX) < 0.2) {
+        return;
+      }
+      this.pointerMoved = true;
       let displacement = Math.abs(Math.floor(diffX));
       if (diffX > 0) {
         this.increaseValue(this.defaultDiff * displacement);
@@ -96,19 +101,49 @@ export default defineComponent({
         throw "[NumberInput] Start element is null";
       }
       console.log(this.pointerMoved,
-      this.startElement.classList.contains('shader-node-arrow-left'));
+      this.startElement.classList);
       if (!this.pointerMoved &&
         this.startElement.classList.contains('shader-node-arrow-right')) {
         this.increaseValue();
       } else  if (!this.pointerMoved &&
           this.startElement.classList.contains('shader-node-arrow-left')) {
         this.decreaseValue();
-      } else {
-        //
+      } else if (!this.pointerMoved) {
+        //console.log(  
+        this.state = State.Active;
+        document.addEventListener("keydown", this.handleKeyDown);
+        document.addEventListener("pointerdown", this.handleSaveContent);
+        this.$nextTick(() => {
+          console.log('iiin', <HTMLElement>this.$refs.inputField);
+          (<HTMLInputElement>this.$refs.inputField).focus();
+          (<HTMLInputElement>this.$refs.inputField).select();
+        });
       }
       this.pointerMoved = false;
       document.removeEventListener("pointermove", this.handlePointerMove);
       document.removeEventListener("pointerup", this.handlePointerUp);
+    },
+    resetInitState() {
+      this.state = State.Init;
+      this.value = parseFloat(this.tempValue);
+      this.tempValue = this.value.toFixed(3).toString();
+      console.log('val', this.tempValue);
+
+      document.removeEventListener("keydown", this.handleKeyDown);
+      document.removeEventListener("pointerdown", this.handleSaveContent);
+    },
+    handleSaveContent(e : PointerEvent) {
+      let container = <HTMLElement>this.$refs.inputContainer;
+      let bounding = container.getBoundingClientRect();
+      if (e.clientX < bounding.left || e.clientX > bounding.left + bounding.width ||
+        e.clientY < bounding.top || e.clientY > bounding.top + bounding.height) {
+        this.resetInitState();
+      }
+    },
+    handleKeyDown(e : KeyboardEvent) {
+      if (this.state === State.Active && e.key === "Enter") {
+        this.resetInitState();
+      }
     },
     increaseValue(amount ?: number) {
       if (this.value === null) {
@@ -122,6 +157,7 @@ export default defineComponent({
       } else {
         this.value = this.maxValue;
       }
+      this.tempValue = this.value.toFixed(3).toString();
     },
     decreaseValue(amount ?: number) {
       if (this.value === null) {
@@ -135,10 +171,15 @@ export default defineComponent({
       } else {
         this.value = this.minValue;
       }
+      this.tempValue = this.value.toFixed(3).toString();
     }
   },
   mounted() {
     this.value = this.input.getValue().value;
+    if (this.value === null) {
+      throw "[NumberInput] value is null";
+    }
+    this.tempValue = this.value.toString();
     this.minValue = this.input.getMinValue();
     this.maxValue = this.input.getMaxValue();
     if(this.minValue !== undefined && this.maxValue !== undefined) {
@@ -191,6 +232,21 @@ export default defineComponent({
   }
 }
 
+.shader-node-number-input-field {
+  background: #555;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding-inline: 5px;
+  outline: none;
+  border: 0;
+  position: relative;
+  border-radius: 5px;
+  color: #eee;
+  font-family: monospace;
+  height: 1.35rem;
+}
+
 .shader-node-arrow-left:hover {
   border-radius: 5px 0 0 5px;
 }
@@ -215,5 +271,12 @@ export default defineComponent({
   &:hover {
     background-color: #444;
   }
+  &.single-element {
+    border-radius: 5px;
+  }
+}
+.shader-node-number-input-active {
+  height: 1.35rem;
+  position: relative;
 }
 </style>
