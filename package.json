@@ -11,10 +11,13 @@
     "@rushstack/eslint-patch": "^1.1.4",
     "@vue/eslint-config-typescript": "^11.0.0",
     "mitt": "^3.0.0",
+    "stats.js": "^0.17.0",
     "three": "^0.141.0",
     "vue": "^3.2.25"
   },
   "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/stats.js": "^0.17.0",
     "@types/three": "^0.141.0",
     "@typescript-eslint/eslint-plugin": "^5.28.0",
     "@typescript-eslint/parser": "^5.28.0",

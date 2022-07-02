@@ -1,6 +1,8 @@
 import * as THREE from "three";
+import Stats from "stats.js";
 import { Events } from "./Manager";
 import {Emitter} from "mitt";
+import { warn } from "vue";
 
 export class Scene {
   height: number;
@@ -8,6 +10,8 @@ export class Scene {
   width: number;
 
   canvas: HTMLElement;
+
+  stats: Stats;
 
   emitter: Emitter<Events>;
 
@@ -31,6 +35,22 @@ export class Scene {
     this.height = bounding.height;
     this.width = bounding.width;
     this.canvas = canvas;
+    const div = document.createElement("div");
+    div.style.gridArea = "canvas";
+    div.style.width = "100%";
+    div.style.height = "100%";
+    this.stats = new Stats();
+    this.stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+    this.stats.dom.style.position = "relative";
+    this.stats.dom.style.right = "0";
+    this.stats.dom.style.left = "";
+    this.stats.dom.style.display = "flex";
+    this.stats.dom.style.justifyContent = "flex-end";
+    this.canvas.parentNode.appendChild(div);
+    div.appendChild(this.stats.dom);
+
+
+
     this.emitter = emitter;
     this.camera = new THREE.PerspectiveCamera(
       75,
@@ -72,12 +92,14 @@ export class Scene {
   }
 
   animate() {
-    requestAnimationFrame(() => this.animate());
+    this.stats.begin();
     this.renderer.render(this.scene, this.camera);
     const delta = this.clock.getDelta();
     this.mesh.rotation.z += delta * Math.PI / 6;
     this.mesh.rotation.x += delta * Math.PI / 6;
     this.mesh.rotation.y += delta * Math.PI / 6;
+    this.stats.end();
+    requestAnimationFrame(() => this.animate());
   }
 
   updateShaders([ vertShader, fragShader ] : [string, string]) {
@@ -86,6 +108,7 @@ export class Scene {
     material.vertexShader = vertShader;
     material.needsUpdate = true;
     if (!this.startedAnimation) {
+      this.startedAnimation = true;
       this.animate();
     }
   }

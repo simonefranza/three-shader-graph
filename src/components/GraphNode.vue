@@ -108,6 +108,7 @@ export default defineComponent({
   box-shadow: 0px 0px 0px 0.5px #696969;
   border-radius: 0 0 .5rem .5rem;
   padding-block: .5rem;
+  text-transform: capitalize;
 }
 .shader-node-output,
 .shader-node-input {

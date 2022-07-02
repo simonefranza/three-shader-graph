@@ -1,6 +1,7 @@
 import { BaseNode } from "./BaseNode";
 import { BaseOutput } from "./BaseOutput";
 import { BaseInput, InputVariablesMap } from "./BaseInput";
+import { InputNumber } from "./InputNumber";
 import { VertexShader } from "../shaders/VertexShader";
 import { FragmentShader } from "../shaders/FragmentShader";
 import { ShaderVariable, FunctionsMap } from "../shaders/CommonShader";
@@ -17,48 +18,30 @@ export class NoiseTexture extends BaseNode {
     super(
       "Noise Texture",
       {inputList : [
-        new BaseInput(
+        new InputNumber(
           "scale",
           "number",
-          "number",
-        <ShaderVariable>{
-          name : "scale",
-          type : "float",
-          value : 5
-        }
-        ),
+          2),
         // from 0 to 15, AKA octaves
-        new BaseInput(
+        new InputNumber(
           "detail",
           "number",
-          "number",
-        <ShaderVariable>{
-          name : "detail",
-          type : "float",
-          value : 0
-        }
+          2,
+          0,
+          15
         ),
         // from 0 to 1, AKA persistance
-        new BaseInput(
+        new InputNumber(
           "roughness",
           "number",
-          "number",
-        <ShaderVariable>{
-          name : "roughness",
-          type : "float",
-          value : 0.5
-        }
+          0.5,
+          0,
+          1
         ),
-        new BaseInput(
+        new InputNumber(
           "distortion",
           "number",
-          "number",
-        <ShaderVariable>{
-          name : "distortion",
-          type : "float",
-          value : 0.0
-        }
-        )
+          0)
       ]},
       new BaseOutput("color", "color"),
     );
@@ -228,25 +211,26 @@ float fbm(
   float amp = .5;
   float freq = scale;
   float noise = 0.;
+  float counter = 0.;
 
-  for (float i = 0.; i < octaveInt + 1.; i++) {
+  for (float i = 0.; i < octaveInt; i++) {
     noise += snoise(v * freq) * amp;
     maxAmp += amp;
     amp *= persistance;
     freq *= 2.;
+    counter++;
   }
   
-  if (octaveFrac > 0.) {
-    float newNoise = noise + snoise(v * freq) * amp;
-    maxAmp += amp;
-    noise = mix(noise, newNoise, octaveFrac);
-  }
+  float newNoise = noise + snoise(v * freq) * amp;
+  maxAmp += amp * octaveFrac;
+  noise = mix(noise, newNoise, octaveFrac);
 
   noise /= maxAmp;
   noise /= 2.35;
   noise = noise * 0.5 + 0.5;
 
   return noise;
+  //return step(1.5, counter);
 }
 `};
   }
@@ -295,11 +279,14 @@ float fbm(
     const fVar = frag.generateVariableID("nt_f_");
     const finalColor = frag.generateVariableID("nt_color_");
     frag.addAllToFunctions(this.noiseFunction);
+    console.log("roughness", super.formatValue(roughnessValue.value));
+    console.log("octave", super.formatValue(Math.floor(detailValue.value + 1)));
+    console.log("octave frac", super.formatValue(detailValue.value % 1));
     frag.addToMain(`
     vec3 ${stVar} = projPosition;
     // Scale the space in order to see the function
     float ${scaleVar} = ${super.formatValue(scaleValue.value)};
-    const float ${octaveIntVar} = ${super.formatValue(Math.floor(detailValue.value))};
+    const float ${octaveIntVar} = ${super.formatValue(Math.floor(detailValue.value + 1))};
     const float ${octaveFracVar} = ${super.formatValue(detailValue.value % 1)};
     const float ${persistanceVar} = ${super.formatValue(roughnessValue.value)};
     const float ${distortionVar} = ${super.formatValue(distortionValue.value / 10)};
@@ -323,7 +310,7 @@ float fbm(
         fbm(
         ${octaveIntVar},
         ${octaveFracVar},
-        ${stVar}+vec3(1.3, 2.5, 6.),
+        ${stVar}+vec3(-1.3, -2.5, 6.),
         ${persistanceVar},
         ${scaleVar}
     ));

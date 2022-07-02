@@ -5,12 +5,20 @@
     @pointerup="(e) => handlePointerUp(e)"
     ref="inputEl"
   ></div>
-  <span class="shader-node-input-label">{{state}} - {{input.getName()}}</span>
-  <input class="shader-node-input-field" type="text" v-model="value"/>
+  <NumberInput
+    v-if ="input.getType() === 'number'"
+    :input="input"
+    :emitter="emitter"
+  ></NumberInput>
+  <span v-else>
+    <span class="shader-node-input-label">{{input.getType()}} aaaa- {{state}} - {{input.getName()}}</span>
+    <input class="shader-node-input-field" type="text" v-model="value"/>
+  </span>
 
 </template>
 
 <script lang="ts">
+import NumberInput from "@/components/NumberInput.vue";
 import { PropType, defineComponent } from 'vue'
 import { BaseInput } from "../graph/nodes/BaseInput";
 import { RendererNode } from "../graph/renderer/RendererNode";
@@ -25,6 +33,9 @@ enum State {
 }
 
 export default defineComponent({
+  components: {
+    NumberInput,
+  },
   data() {
     return {
       value: null,
