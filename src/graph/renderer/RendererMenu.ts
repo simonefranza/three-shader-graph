@@ -4,6 +4,7 @@ import { OutputNode } from "../nodes/OutputNode";
 import { BaseNode } from "../nodes/BaseNode";
 import { PrincipledBSDF } from "../nodes/PrincipledBSDF";
 import { NoiseTexture } from "../nodes/NoiseTexture";
+import { ColorRamp } from "../nodes/ColorRamp";
 
 export class RendererMenu {
   container: HTMLElement;
@@ -71,7 +72,7 @@ export class RendererMenu {
     this.addStyles();
     this.menu = this.createMenu();
     this.active = false;
-    this.pointerPos = { x : pos.x, y : pos.y };
+    this.pointerPos = { x: pos.x, y: pos.y };
 
     this.emitter.on("showMenu", () => this.handleKeyDown());
 
@@ -112,8 +113,8 @@ export class RendererMenu {
     document.head.appendChild(styleSheet);
   }
 
-  createMenu() : HTMLElement {
-    const container : HTMLElement=
+  createMenu(): HTMLElement {
+    const container: HTMLElement =
       document.createElement("div");
     container.setAttribute("id", "shader-menu-container");
     const div = document.createElement("div");
@@ -123,25 +124,23 @@ export class RendererMenu {
     const separator = document.createElement("div");
     separator.setAttribute("class", "shader-menu-sep");
 
-    const outNode = document.createElement("span");
-    outNode.setAttribute("class", "shader-menu-el");
-    outNode.textContent = "Material Output";
-    outNode.addEventListener("click", () => this.sendCreateEvent(OutputNode));
-    div.appendChild(outNode);
-    div.appendChild(separator.cloneNode());
-
-    const noiseNode = document.createElement("span");
-    noiseNode.setAttribute("class", "shader-menu-el");
-    noiseNode.textContent = "Noise Texture";
-    noiseNode.addEventListener("click", () => this.sendCreateEvent(NoiseTexture));
-    div.appendChild(noiseNode);
-    div.appendChild(separator.cloneNode());
-
-    const principledNode = document.createElement("span");
-    principledNode.setAttribute("class", "shader-menu-el");
-    principledNode.textContent = "Principled BSDF";
-    principledNode.addEventListener("click", () => this.sendCreateEvent(PrincipledBSDF));
-    div.appendChild(principledNode);
+    const nodes = [
+      {name : "Material Output", nodeType : OutputNode},
+      {name : "Noise Texture", nodeType : NoiseTexture},
+      {name : "Principled BSDF", nodeType : PrincipledBSDF},
+      {name : "ColorRamp", nodeType : ColorRamp}
+    ];
+    
+    nodes.forEach((nodeDesc, idx) => {
+      const node = document.createElement("span");
+      node.setAttribute("class", "shader-menu-el");
+      node.textContent = nodeDesc.name;
+      node.addEventListener("click", () => this.sendCreateEvent(nodeDesc.nodeType));
+      div.appendChild(node);
+      if (idx !== nodes.length - 1) {
+        div.appendChild(separator.cloneNode());
+      }
+    });
 
     this.container.appendChild(container);
 

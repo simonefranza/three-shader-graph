@@ -6,7 +6,9 @@ export class VertexShader extends CommonShader {
   }
 
   generateCode() : string {
-    return `${super.compileUniforms()}
+    return `
+${super.compileDefines()}
+${super.compileUniforms()}
 ${super.compileAttributes()}
 ${super.compileVaryings()}
 ${super.compileIns()}

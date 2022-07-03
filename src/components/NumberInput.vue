@@ -82,7 +82,6 @@ export default defineComponent({
     },
     handlePointerMove(e : PointerEvent) {
       let diffX = e.clientX - this.lastPositionX;
-      console.log(diffX);
       if (Math.abs(diffX) < 0.2) {
         return;
       }
@@ -93,7 +92,6 @@ export default defineComponent({
       } else if (diffX < 0) {
         this.decreaseValue(this.defaultDiff * displacement);
       }
-      console.log(diffX);
       this.lastPositionX = e.clientX;
     },
     handlePointerUp(e : PointerEvent) {
@@ -164,12 +162,14 @@ export default defineComponent({
         throw "[NumberInput] value is null";
       }
       amount = amount || this.defaultDiff;
+      console.log(this.value - amount, this.minValue);
       if (this.minValue === undefined) {
         this.value -= amount;
       } else if (this.value - amount >= this.minValue) {
         this.value -= amount;
       } else {
         this.value = this.minValue;
+        console.log("else", this.minValue, this.value);
       }
       this.tempValue = this.value.toFixed(3).toString();
     }

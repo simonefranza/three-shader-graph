@@ -40,7 +40,6 @@ export class OutputNode extends BaseNode {
     } else {
       const colorVar : ShaderVariable =
         this.inputVariables["surface"].getValue();
-      console.log("color", colorVar);
       const lines : string = `gl_FragColor = ${colorVar.type}` +
           `(${colorVar.value.x}, ${colorVar.value.y}, ` +
           `${colorVar.value.z}, ${colorVar.value.w});`;

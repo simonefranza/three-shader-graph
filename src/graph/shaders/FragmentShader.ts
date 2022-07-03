@@ -7,7 +7,8 @@ export class FragmentShader extends CommonShader {
 
   generateCode() : string {
     return `
-    // Uniforms
+${super.compileDefines()}
+// Uniforms
 ${super.compileUniforms()}
 // Attributes 
 ${super.compileAttributes()}

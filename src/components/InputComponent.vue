@@ -10,6 +10,11 @@
     :input="input"
     :emitter="emitter"
   ></NumberInput>
+  <ColorInput
+    v-else-if ="input.getType() === 'color'"
+    :input="input"
+    :emitter="emitter"
+  ></ColorInput>
   <span v-else>
     <span class="shader-node-input-label">{{input.getType()}} aaaa- {{state}} - {{input.getName()}}</span>
     <input class="shader-node-input-field" type="text" v-model="value"/>
@@ -19,6 +24,7 @@
 
 <script lang="ts">
 import NumberInput from "@/components/NumberInput.vue";
+import ColorInput from "@/components/ColorInput.vue";
 import { PropType, defineComponent } from 'vue'
 import { BaseInput } from "../graph/nodes/BaseInput";
 import { RendererNode } from "../graph/renderer/RendererNode";
@@ -35,6 +41,7 @@ enum State {
 export default defineComponent({
   components: {
     NumberInput,
+    ColorInput,
   },
   data() {
     return {

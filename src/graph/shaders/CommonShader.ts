@@ -5,6 +5,8 @@ export interface FunctionsMap {
 }
 
 export abstract class CommonShader {
+  #defines : ShaderVariable[]; 
+
   #varyings: ShaderVariable[];
 
   #attributes: ShaderVariable[];
@@ -22,6 +24,7 @@ export abstract class CommonShader {
   #variableList : string[];
 
   constructor() {
+    this.#defines = [];
     this.#varyings = [];
     this.#attributes = [];
     this.#uniforms = [];
@@ -33,6 +36,10 @@ export abstract class CommonShader {
   }
 
   abstract generateCode() : string;
+
+  getDefines() {
+    return this.#defines;
+  }
 
   getVaryings() {
     return this.#varyings;
@@ -74,6 +81,14 @@ export abstract class CommonShader {
     return str;
   }
 
+  compileDefines() : string {
+    let str = "";
+    this.#defines.forEach((variable : ShaderVariable) => {
+      str += "#define " + variable.name + " " + variable.value + "\n";
+    });
+    return str;
+  }
+
   compileVaryings() : string {
     return this.compileVariables("varying", this.#varyings);
   }
@@ -108,6 +123,10 @@ export abstract class CommonShader {
       str += this.#functions[funcName] + "\n";
     }
     return str;
+  }
+
+  addToDefines(shaderVar : ShaderVariable) {
+    this.#defines.push(shaderVar);
   }
 
   addToMain(str : string) {
