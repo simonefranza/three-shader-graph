@@ -82,6 +82,7 @@ export class ColorRamp extends BaseNode {
       const facValue : ShaderVariable =
         this.inputVariables["fac"].getValue();
       let finalColorVarName = vert.generateVariableID("col_ramp_color_");
+      console.log(facValue.value, "val");
       let color = this.gradient.getColorAt(facValue.value);
       const line : string = 
         `const vec4 ${finalColorVarName} = vec4(${super.formatValue(color.x)},${super.formatValue(color.y)},${super.formatValue(color.z)},${super.formatValue(color.w)});`;

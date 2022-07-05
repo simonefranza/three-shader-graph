@@ -98,8 +98,6 @@ export default defineComponent({
       if (this.startElement === null) {
         throw "[NumberInput] Start element is null";
       }
-      console.log(this.pointerMoved,
-      this.startElement.classList);
       if (!this.pointerMoved &&
         this.startElement.classList.contains('shader-node-arrow-right')) {
         this.increaseValue();
@@ -107,12 +105,10 @@ export default defineComponent({
           this.startElement.classList.contains('shader-node-arrow-left')) {
         this.decreaseValue();
       } else if (!this.pointerMoved) {
-        //console.log(  
         this.state = State.Active;
         document.addEventListener("keydown", this.handleKeyDown);
         document.addEventListener("pointerdown", this.handleSaveContent);
         this.$nextTick(() => {
-          console.log('iiin', <HTMLElement>this.$refs.inputField);
           (<HTMLInputElement>this.$refs.inputField).focus();
           (<HTMLInputElement>this.$refs.inputField).select();
         });
@@ -125,7 +121,6 @@ export default defineComponent({
       this.state = State.Init;
       this.value = parseFloat(this.tempValue);
       this.tempValue = this.value.toFixed(3).toString();
-      console.log('val', this.tempValue);
 
       document.removeEventListener("keydown", this.handleKeyDown);
       document.removeEventListener("pointerdown", this.handleSaveContent);
@@ -162,14 +157,12 @@ export default defineComponent({
         throw "[NumberInput] value is null";
       }
       amount = amount || this.defaultDiff;
-      console.log(this.value - amount, this.minValue);
       if (this.minValue === undefined) {
         this.value -= amount;
       } else if (this.value - amount >= this.minValue) {
         this.value -= amount;
       } else {
         this.value = this.minValue;
-        console.log("else", this.minValue, this.value);
       }
       this.tempValue = this.value.toFixed(3).toString();
     }
@@ -190,8 +183,7 @@ export default defineComponent({
     value(_, oldVal) {
       if (oldVal === null || this.value === null) return;
 
-      console.log("new value", this.value, oldVal);
-      const value = this.value !== "" ? parseFloat(this.value) : 0;
+      const value = this.value;
       this.input.setValue(value);
       this.emitter.emit("recompile");
     },
