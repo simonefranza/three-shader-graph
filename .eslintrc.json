@@ -18,7 +18,6 @@
     "sourceType": "module"
   },
   "plugins": [
-    "@rushstack/eslint-patch/modern-module-resolution",
     "vue",
     "@typescript-eslint",
     "prettier"

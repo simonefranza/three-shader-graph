@@ -3,6 +3,7 @@ import { BaseNode } from "./nodes/BaseNode";
 import { ShaderGraphRenderer } from "./ShaderGraphRenderer";
 import { Scene } from "./Scene";
 import { Link, LinkElement } from "./renderer/Link";
+import { ViewManager } from "./renderer/ViewManager";
 
 export interface PointerPosition {
   x: number;
@@ -13,6 +14,7 @@ export type Events = {
   pointerMoved: PointerPosition;
   createNode : new () => BaseNode;
   showMenu: undefined;
+  rotateView: undefined;
   deleteNode: undefined;
   fixLink : LinkElement;
   recompile : undefined;
@@ -43,11 +45,8 @@ export class Manager {
 
   graphManager : ShaderGraphRenderer;
 
-  dividerInitialPosition : PointerPosition;
+  viewManager : ViewManager;
 
-  dividerMoveHandler : (e : PointerEvent) => void;
-
-  dividerUpHandler : () => void;
 
   constructor(element : HTMLElement) {
     this.element = element;
@@ -88,19 +87,19 @@ export class Manager {
 }
       `;
     this.addStyles();
-    this.dividerMoveHandler = (e : PointerEvent) => this.handleDividerPointerMove(e);
-    this.dividerUpHandler = () => this.handleDividerPointerUp();
-    this.dividerInitialPosition = {x : 0, y : 0};
     [ this.containerElement,
       this.svgElement,
       this.dividerElement,
       this.canvasElement ] = this.createView();
-    this.dividerElement.addEventListener(
-      "pointerdown",
-      (e : PointerEvent) => this.handleDividerPointerDown(e)
-    );
     this.graphManager = this.createGraphManager();
     this.sceneManager = this.createScene();
+    this.viewManager = new ViewManager(
+      this.emitter,
+      this.containerElement,
+      this.svgElement,
+      this.canvasElement,
+      this.dividerElement
+    );
   }
 
   addStyles() {
@@ -142,24 +141,4 @@ export class Manager {
     return new ShaderGraphRenderer(this.svgElement, this.emitter);
   }
 
-  handleDividerPointerDown(e : PointerEvent) {
-    addEventListener("pointermove", this.dividerMoveHandler);
-    addEventListener("pointerup", this.dividerUpHandler);
-    this.dividerInitialPosition.x = e.clientX / innerWidth * 100.5;
-    this.canvasElement.style.width = "";
-    this.canvasElement.style.height = "";
-  }
-
-  handleDividerPointerMove(e : PointerEvent) {
-    const posX = e.clientX / innerWidth * 100;
-    this.containerElement.style.gridTemplateColumns = `${posX}fr 5px ${100 - posX}fr`;
-    this.emitter.emit("resizeGraph");
-  }
-
-  handleDividerPointerUp() {
-    removeEventListener("pointermove", this.dividerMoveHandler);
-    removeEventListener("pointerup", this.dividerUpHandler);
-    this.emitter.emit("resizeCanvas");
-    this.emitter.emit("resizeGraph");
-  }
 }

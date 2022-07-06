@@ -15,6 +15,10 @@ export class ZoomPanManager {
 
   widthUnits : number;
 
+  heightPx: number;
+
+  heightUnits : number;
+
   emitter : Emitter<Events>;
 
   pointerPos : PointerPosition;
@@ -30,6 +34,8 @@ export class ZoomPanManager {
     const bounding = this.canvas.getBoundingClientRect();
     this.widthPx = bounding.width;
     this.widthUnits = bounding.width;
+    this.heightPx = bounding.height;
+    this.heightUnits = bounding.height;
     this.emitter = emitter;
     this.state = State.Initial;
 
@@ -48,9 +54,12 @@ export class ZoomPanManager {
       }
       const viewBoxSplit = viewBox.split(" ").map((el) => parseFloat(el));
       this.widthUnits *= (bounding.width / this.widthPx);
+      this.heightUnits *= (bounding.height / this.heightPx);
       viewBoxSplit[2] = this.widthUnits;
+      viewBoxSplit[3] = this.heightUnits;
       this.canvas.setAttribute("viewBox", viewBoxSplit.join(" "));
       this.widthPx = bounding.width;
+      this.heightPx = bounding.height;
     });
   }
 

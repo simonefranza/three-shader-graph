@@ -14,6 +14,8 @@ export class KeyboardHandler {
     console.log(e);
     if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey && e.key === "A") {
       this.emitter.emit("showMenu");
+    } else if (!e.altKey && !e.ctrlKey && !e.metaKey && e.shiftKey && e.key === "W") {
+      this.emitter.emit("rotateView");
     } else if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key === "x") {
       console.log("delete Node");
       this.emitter.emit("deleteNode");

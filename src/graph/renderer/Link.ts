@@ -14,7 +14,7 @@ const DOMState = {
   Open : "open",
   Busy : "busy",
   Linked : "linked",
-}
+};
 
 export class Link {
   canvas: SVGForeignObjectElement;
@@ -65,11 +65,11 @@ export class Link {
     console.log("end", this.endPosition);
     if (startElement !== undefined && startElement !== null) {
       this.startElement = startElement;
-      this.startElement.setAttribute('data-state', DOMState.Busy);
+      this.startElement.setAttribute("data-state", DOMState.Busy);
     }
     if (endElement !== undefined && endElement !== null) {
       this.endElement = endElement;
-      this.endElement.setAttribute('data-state', DOMState.Busy);
+      this.endElement.setAttribute("data-state", DOMState.Busy);
     }
     if (inOutput instanceof BaseOutput) {
       this.startOutput = inOutput;
@@ -211,10 +211,10 @@ export class Link {
       this.emitter.emit("recompile");
     }
     if (this.startElement !== undefined) {
-      this.startElement.setAttribute('data-state', DOMState.Open);
+      this.startElement.setAttribute("data-state", DOMState.Open);
     }
     if (this.endElement !== undefined) {
-      this.endElement.setAttribute('data-state', DOMState.Open);
+      this.endElement.setAttribute("data-state", DOMState.Open);
     }
   }
 
@@ -259,8 +259,8 @@ export class Link {
     } else if (this.startElement === undefined) {
       throw "[Link] After fixing link, startElement is undefined";
     }
-    this.startElement.setAttribute('data-state', "linked");
-    this.endElement.setAttribute('data-state', "linked");
+    this.startElement.setAttribute("data-state", "linked");
+    this.endElement.setAttribute("data-state", "linked");
     console.log(this.endElement);
     this.startNode.addOutgoingLink(this, this.startOutput);
     this.endNode.addIncomingLink(this, this.endInput);

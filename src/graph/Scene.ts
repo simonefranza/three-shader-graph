@@ -117,6 +117,7 @@ export class Scene {
   handleResize() {
     this.canvas.style.width = "";
     this.canvas.style.height = "";
+    this.canvas.style.minHeight = "1px";
     this.canvas.removeAttribute("width");
     this.canvas.removeAttribute("height");
     const bounding = this.canvas.getBoundingClientRect();
@@ -125,5 +126,6 @@ export class Scene {
     this.renderer.setSize(this.width, this.height);
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
+    this.canvas.style.minHeight = "";
   }
 }
