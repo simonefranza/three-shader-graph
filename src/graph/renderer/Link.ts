@@ -8,6 +8,7 @@ import * as Utils from "./utils";
 enum State {
   Initial,
   Fixed,
+  Detached,
 }
 
 const DOMState = {
@@ -85,7 +86,7 @@ export class Link {
     this.updateShape();
     this.state = State.Initial;
 
-    this.pointerMoveHandler = (e: PointerEvent) => this.handlePointerMove(e);
+    this.pointerMoveHandler = (e: PointerEvent) => this.handlePointerMoveInitial(e);
     addEventListener("pointermove", this.pointerMoveHandler);
 
     this.pointerUpHandler = () => this.handlePointerUp();
@@ -148,7 +149,7 @@ export class Link {
     );
   }
 
-  handlePointerMove(e: PointerEvent) {
+  handlePointerMoveInitial(e: PointerEvent) {
     if (this.state !== State.Initial) {
       throw "[Link::handlePointerMove] state is not Initial";
     }
@@ -163,10 +164,35 @@ export class Link {
     }
   }
 
-  handlePointerUp() {
-    if (this.state !== State.Initial) {
-      throw "[Link::handlePointerMove] state is not Initial";
+  handlePointerMoveDetached(e: PointerEvent) {
+    if (this.state !== State.Detached) {
+      throw "[Link::handlePointerMove] state is not Detached";
     }
+    if (this.startElement === undefined) {
+      throw "[Link] startElement is undefined";
+    }
+    const boundingStart = this.startElement.getBoundingClientRect();
+    const distances = this.convertCanvasDistances([
+      boundingStart.width / 2,
+      boundingStart.height / 2,
+    ]);
+    console.log(e.clientX, e.clientY);
+    const positions = this.convertCanvasPosition([
+      { x : boundingStart.left, y : boundingStart.top },
+      { x : e.clientX, y : e.clientY},
+    ]);
+    this.startPosition.x = positions[0].x + distances[0];
+    this.startPosition.y = positions[0].y + distances[1];
+    this.endPosition.x = positions[1].x;
+    this.endPosition.y = positions[1].y;
+    this.updateShape(false);
+  }
+
+  handlePointerUp() {
+    if (this.state !== State.Initial && this.state !== State.Detached) {
+      throw "[Link::handlePointerMove] state is not Initial or Detached";
+    }
+    console.log("up");
     this.emitter.emit("cancelLink");
     this.deleteElement();
   }
@@ -175,15 +201,34 @@ export class Link {
     if (this.endElement === undefined) {
       throw "[Link] Detaching end but endElement is undefined";
     }
-    this.endElement.setAttribute("data-state", DOMState.Open);
-    this.endElement = undefined;
-    this.state = State.Initial;
+    if (this.startElement === undefined) {
+      throw "[Link] startElement is undefined";
+    }
+    this.state = State.Detached;
+    this.pointerMoveHandler = (e: PointerEvent) => this.handlePointerMoveDetached(e);
     addEventListener("pointermove", this.pointerMoveHandler);
     addEventListener("pointerup", this.pointerUpHandler);
     this.emitter.on("fixLink", this.fixLinkHandler);
     // TODO unlink from node
-    this.updateShape();
-    console.log("detached");
+    const boundingEnd = this.endElement.getBoundingClientRect();
+    const boundingStart = this.startElement.getBoundingClientRect();
+    const distances = this.convertCanvasDistances([
+      boundingStart.width / 2,
+      boundingStart.height / 2,
+      boundingEnd.width / 2,
+      boundingEnd.height / 2,
+    ]);
+    const positions = this.convertCanvasPosition([
+      { x : boundingStart.left, y : boundingStart.top },
+      { x : boundingEnd.left, y : boundingEnd.top },
+    ]);
+    this.startPosition.x = positions[0].x + distances[0];
+    this.startPosition.y = positions[0].y + distances[1];
+    this.endPosition.x = positions[1].x + distances[2];
+    this.endPosition.y = positions[1].y + distances[3];
+    this.endElement.setAttribute("data-state", DOMState.Open);
+    this.endElement = undefined;
+    this.updateShape(false);
   }
 
   deleteElement() {
@@ -218,9 +263,45 @@ export class Link {
   }
 
   fixLink(obj: LinkElement) {
-    if (this.state !== State.Initial) {
-      throw "[Link::fixLink] state is Initial";
+    if (this.state !== State.Initial && this.state !== State.Detached) {
+      throw "[Link::fixLink] state is not Initial or Detached";
     }
+    switch (this.state) {
+    case State.Initial:
+      this.fixLinkInitial(obj);
+      break;
+    case State.Detached:
+      this.fixLinkDetached(obj);
+      break;
+    default:
+      throw "[Link::fixLink] state is not initial or Detached";
+    }
+    if (this.endInput === undefined) {
+      throw "[Link] After fixing link, endInput is undefined";
+    } else if (this.endNode === undefined) {
+      throw "[Link] After fixing link, endNode is undefined";
+    } else if (this.endElement === undefined) {
+      throw "[Link] After fixing link, endElement is undefined";
+    } else if (this.startOutput === undefined) {
+      throw "[Link] After fixing link, startOutput is undefined";
+    } else if (this.startNode === undefined) {
+      throw "[Link] After fixing link, startNode is undefined";
+    } else if (this.startElement === undefined) {
+      throw "[Link] After fixing link, startElement is undefined";
+    }
+    this.startElement.setAttribute("data-state", "linked");
+    this.endElement.setAttribute("data-state", "linked");
+    this.startNode.addOutgoingLink(this, this.startOutput);
+    this.endNode.addIncomingLink(this, this.endInput);
+    this.startOutput.connectTo(this.endInput);
+    this.state = State.Fixed;
+    removeEventListener("pointermove", this.pointerMoveHandler);
+    removeEventListener("pointerup", this.pointerUpHandler);
+    this.emitter.off("fixLink", this.fixLinkHandler);
+    this.emitter.emit("recompile");
+  }
+
+  fixLinkInitial(obj : LinkElement) {
     if (obj.startElement !== undefined) {
       this.startElement = obj.startElement;
       const bounding = this.startElement.getBoundingClientRect();
@@ -245,30 +326,29 @@ export class Link {
     if (obj.endNode !== undefined) {
       this.endNode = obj.endNode;
     }
-    if (this.endInput === undefined) {
-      throw "[Link] After fixing link, endInput is undefined";
-    } else if (this.endNode === undefined) {
-      throw "[Link] After fixing link, endNode is undefined";
-    } else if (this.endElement === undefined) {
-      throw "[Link] After fixing link, endElement is undefined";
-    } else if (this.startOutput === undefined) {
-      throw "[Link] After fixing link, startOutput is undefined";
-    } else if (this.startNode === undefined) {
-      throw "[Link] After fixing link, startNode is undefined";
-    } else if (this.startElement === undefined) {
-      throw "[Link] After fixing link, startElement is undefined";
-    }
-    this.startElement.setAttribute("data-state", "linked");
-    this.endElement.setAttribute("data-state", "linked");
-    this.startNode.addOutgoingLink(this, this.startOutput);
-    this.endNode.addIncomingLink(this, this.endInput);
-    this.startOutput.connectTo(this.endInput);
-    this.state = State.Fixed;
-    removeEventListener("pointermove", this.pointerMoveHandler);
-    removeEventListener("pointerup", this.pointerUpHandler);
-    this.emitter.off("fixLink", this.fixLinkHandler);
     this.updateShape();
-    this.emitter.emit("recompile");
+
+  }
+
+  fixLinkDetached(obj : LinkElement) {
+    if (obj.endElement === undefined || obj.endInput === undefined || obj.endNode === undefined) {
+      throw "[Link::fixLinkDetached] end elements are undefined";
+    }
+    this.endInput = obj.endInput;
+    this.endNode = obj.endNode;
+
+    this.endElement = obj.endElement;
+    const boundingEnd = this.endElement.getBoundingClientRect();
+    const distances = this.convertCanvasDistances([
+      boundingEnd.width / 2,
+      boundingEnd.height / 2,
+    ]);
+    const positions = this.convertCanvasPosition([
+      { x : boundingEnd.left, y : boundingEnd.top },
+    ]);
+    this.endPosition.x = positions[0].x + distances[0];
+    this.endPosition.y = positions[0].y + distances[1];
+    this.updateShape(false);
   }
 
   moveLink() {
@@ -278,7 +358,6 @@ export class Link {
     if (this.startElement === undefined) {
       throw "[Link] startElement is undefined";
     }
-    const boundingCanvas = this.canvas.getBoundingClientRect();
     const boundingStart = this.startElement.getBoundingClientRect();
     const boundingEnd = this.endElement.getBoundingClientRect();
     const distances = this.convertCanvasDistances([
@@ -286,8 +365,6 @@ export class Link {
       boundingStart.height / 2,
       boundingEnd.width / 2,
       boundingEnd.height / 2,
-      boundingCanvas.top,
-      boundingCanvas.left
     ]);
     const positions = this.convertCanvasPosition([
       { x : boundingStart.left, y : boundingStart.top },

@@ -263,6 +263,7 @@ export class RendererNode {
   }
 
   fixLink(obj: LinkElement) {
+    console.log("fix");
     this.emitter.emit("fixLink", obj);
   }
 

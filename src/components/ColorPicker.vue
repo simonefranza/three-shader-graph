@@ -101,7 +101,9 @@ export default defineComponent({
       const len = Math.sqrt(left * left + top * top);
       let angle = 0;
       console.log("angle", Math.atan(left/top));
-      if (top >= 0 && left >= 0) {
+      if (top === 0 && left === 0) {
+        angle = 0;
+      } else if (top >= 0 && left >= 0) {
         // top >= 0 left >= 0
         angle = Math.PI + Math.atan(left/top);
       } else if (top >= 0) {
