@@ -8,7 +8,6 @@ import * as Utils from "./utils";
 import {RendererNodeMovement} from "./RendererNodeMovement";
 import GraphNode from "../../components/GraphNode.vue";
 import {createApp } from "vue";
-import { posix } from "path";
 
 interface IncomingLink {
   link: Link,

@@ -22,6 +22,7 @@ export default defineComponent({
       saturation : 100,
       value: 1,
       alpha : 1,
+      canvas : document.getElementById("renderer-canvas"),
     };
   },
   props: {
@@ -34,22 +35,30 @@ export default defineComponent({
     handlePointerDownWheel(e : PointerEvent) {
       const wheel = <HTMLElement>this.$refs.wheel;
       const bounding = wheel.getBoundingClientRect();
+      const {left, top} = this.scaleOffsetToPixels(
+        e.clientY - bounding.top,
+        e.clientX - bounding.left
+      );
       (<HTMLElement>this.$refs.wheelSelector)
-        .style.top = `${e.clientY - bounding.top}px`;
+        .style.left = `${left}px`;
       (<HTMLElement>this.$refs.wheelSelector)
-        .style.left = `${e.clientX - bounding.left}px`;
+        .style.top = `${top}px`;
       document.addEventListener("pointermove", this.handlePointerMoveWheel);
       document.addEventListener("pointerup", this.handlePointerUpWheel);
     },
     handlePointerDownBar(e : PointerEvent) {
       const bar= <HTMLElement>this.$refs.bar;
       const bounding = bar.getBoundingClientRect();
+      const {top} = this.scaleOffsetToPixels(
+        e.clientY - bounding.top,
+      );
       (<HTMLElement>this.$refs.barSelector)
-        .style.top = `${e.clientY - bounding.top}px`;
+        .style.top = `${top}px`;
       document.addEventListener("pointermove", this.handlePointerMoveBar);
       document.addEventListener("pointerup", this.handlePointerUpBar);
     },
     moveWheelSelector(e : PointerEvent) {
+      console.log("move");
       const wheel = <HTMLElement>this.$refs.wheel;
       const bounding = wheel.getBoundingClientRect();
       const radius = bounding.width / 2;
@@ -57,16 +66,24 @@ export default defineComponent({
       const diff = [center[0] - e.clientX, center[1] - e.clientY];
       const length = Math.sqrt(diff[0] * diff[0] + diff[1]*diff[1]);
       if (length <= radius) {
+        const {top, left} = this.scaleOffsetToPixels(
+          e.clientY - bounding.top,
+          e.clientX - bounding.left
+        );
         (<HTMLElement>this.$refs.wheelSelector)
-          .style.top = `${e.clientY - bounding.top}px`;
+          .style.top = `${top}px`;
         (<HTMLElement>this.$refs.wheelSelector)
-          .style.left = `${e.clientX - bounding.left}px`;
+          .style.left = `${left}px`;
       } else {
         const normalizedScaled = [radius * diff[0] / length, radius * diff[1] / length];
+        const {top, left} = this.scaleOffsetToPixels(
+          -normalizedScaled[1] + radius,
+          -normalizedScaled[0] + radius
+        );
         (<HTMLElement>this.$refs.wheelSelector)
-          .style.left = `${-normalizedScaled[0] + radius}px`;
+          .style.left = `${left}px`;
         (<HTMLElement>this.$refs.wheelSelector)
-          .style.top = `${-normalizedScaled[1] + radius}px`;
+          .style.top = `${top}px`;
       }
       this.getWheelCoordinates();
     },
@@ -75,14 +92,20 @@ export default defineComponent({
     },
     moveBarSelector(e : PointerEvent) {
       const bar = <HTMLElement>this.$refs.bar;
+      // TODO Fix issue when moving bar and pointer up is on node color (closes picker)
       const bounding = bar.getBoundingClientRect();
-      const top = parseFloat((<HTMLElement>this.$refs.barSelector).style.top) ?? 0;
       if (e.clientY > bounding.top + bounding.height) {
-        (<HTMLElement>this.$refs.barSelector).style.top = `${bounding.height}px`;
+        const {top} = this.scaleOffsetToPixels(
+          bounding.height,
+        );
+        (<HTMLElement>this.$refs.barSelector).style.top = `${top}px`;
       } else if  (e.clientY < bounding.top) {
         (<HTMLElement>this.$refs.barSelector).style.top = `0`;
       } else {
-        (<HTMLElement>this.$refs.barSelector).style.top = `${e.clientY - bounding.top}px`;
+        const {top} = this.scaleOffsetToPixels(
+          e.clientY - bounding.top,
+        );
+        (<HTMLElement>this.$refs.barSelector).style.top = `${top}px`;
       }
       this.getWheelCoordinates();
       (<HTMLElement>this.$refs.wheel).style.filter = `brightness(${this.value})`;
@@ -94,10 +117,15 @@ export default defineComponent({
       const wheel = <HTMLElement>this.$refs.wheel;
       const bounding = wheel.getBoundingClientRect();
       const radius = bounding.width / 2;
-      const center = [bounding.left + bounding.width / 2, bounding.top + bounding.height / 2];
       const wheelSelector = (<HTMLElement>this.$refs.wheelSelector);
-      const left = parseFloat(wheelSelector.style.left)  / radius - 1;
-      const top = 1 - parseFloat(wheelSelector.style.top) / radius;
+      const {left : scaledLeft, top : scaledTop} = 
+       this.scaleOffsetFromPixels(
+        parseFloat(wheelSelector.style.top),
+        parseFloat(wheelSelector.style.left)
+      );
+      const top = 1 - scaledTop / radius;
+      const left = scaledLeft / radius - 1;
+      console.log("coord", top, left);
       const len = Math.sqrt(left * left + top * top);
       let angle = 0;
       console.log("angle", Math.atan(left/top));
@@ -122,7 +150,7 @@ export default defineComponent({
       const bar = (<HTMLElement>this.$refs.bar);
       const barBounding = bar.getBoundingClientRect();
       const barSelector = (<HTMLElement>this.$refs.barSelector);
-      let topValue = parseFloat(barSelector.style.top);
+      const {top : topValue} = this.scaleOffsetFromPixels(parseFloat(barSelector.style.top));
       this.value = 1 - topValue / barBounding.height;
     },
     handlePointerUpWheel(e : PointerEvent) {
@@ -156,7 +184,7 @@ export default defineComponent({
     },
     rgb2hsv (r : number, g : number, b : number) {
       //https://stackoverflow.com/questions/8022885/rgb-to-hsv-color-in-javascript
-      let rabs, gabs, babs, rr, gg, bb, h, s, v : number, diff : number, diffc, percentRoundFn;
+      let rabs, gabs, babs, rr, gg, bb, h, s, v : number, diff : number, diffc;
       rabs = r;
       gabs = g;
       babs = b;
@@ -177,10 +205,13 @@ export default defineComponent({
               h = (1 / 3) + rr - bb;
           } else if (babs === v) {
               h = (2 / 3) + gg - rr;
+          } else {
+            console.log({rabs, gabs, babs, v, r, g, b});
+            throw "[rgb2hsv] h is undefined";
           }
           if (h < 0) {
               h += 1;
-          }else if (h > 1) {
+          } else if (h > 1) {
               h -= 1;
           }
       }
@@ -188,6 +219,38 @@ export default defineComponent({
           h: h * 360,
           s: s,
           v: v
+      };
+    },
+    scaleOffsetToPixels(top : number, left ?: number) : {left : number, top : number} {
+      if (this.canvas === null) {
+        throw "[ColorPicker::scaleOffsetToPixels] canvas is null";
+      }
+      left = left || 0;
+      const viewBox = this.canvas.getAttribute("viewBox");
+      if (viewBox === null) {
+        throw "[ColorPicker::scaleOffsetToPixels] viewBox is null";
+      }
+      const viewBoxSplit = viewBox.split(" ").map((el) => parseFloat(el));
+      const canvasBounding = this.canvas.getBoundingClientRect();
+      return {
+        left : left * viewBoxSplit[3] / canvasBounding.height,
+        top : top * viewBoxSplit[2] / canvasBounding.width
+      };
+    },
+    scaleOffsetFromPixels(top : number, left ?: number) : {left : number, top : number} {
+      if (this.canvas === null) {
+        throw "[ColorPicker::scaleOffsetFromPixels] canvas is null";
+      }
+      left = left || 0;
+      const viewBox = this.canvas.getAttribute("viewBox");
+      if (viewBox === null) {
+        throw "[ColorPicker::scaleOffsetToPixels] viewBox is null";
+      }
+      const viewBoxSplit = viewBox.split(" ").map((el) => parseFloat(el));
+      const canvasBounding = this.canvas.getBoundingClientRect();
+      return {
+        left : left / viewBoxSplit[3] * canvasBounding.height,
+        top : top / viewBoxSplit[2] * canvasBounding.width
       };
     },
     setSelector() {
@@ -202,7 +265,10 @@ export default defineComponent({
       const bar = (<HTMLElement>this.$refs.bar);
       const barBounding = bar.getBoundingClientRect();
       const barSelector = (<HTMLElement>this.$refs.barSelector);
-      barSelector.style.top = `${(-v + 1) * barBounding.height}px`;
+      const {top : topBar} = this.scaleOffsetToPixels(
+        (-v + 1) * barBounding.height
+      );
+      barSelector.style.top = `${topBar}px`;
       const angle = h * Math.PI / 180;
       console.log("angle", angle + Math.PI, h);
       const sin = Math.sin(angle + Math.PI / 2);
@@ -212,8 +278,12 @@ export default defineComponent({
       const bounding = wheel.getBoundingClientRect();
       const radius = bounding.width / 2;
       const wheelSelector = (<HTMLElement>this.$refs.wheelSelector);
-      wheelSelector.style.left = `${s * radius * cos + radius}px`;
-      wheelSelector.style.top = `${sin * s * radius + radius}px`;
+      const {top : topWheel, left : leftWheel} = this.scaleOffsetToPixels(
+        sin * s * radius + radius,
+        s * radius * cos + radius
+      );
+      wheelSelector.style.left = `${leftWheel}px`;
+      wheelSelector.style.top = `${topWheel}px`;
     },
   },
   watch: {
@@ -246,6 +316,7 @@ export default defineComponent({
   border-radius: 5px;
   left: 50%;
   bottom: 100%;
+  box-shadow: 0px 0px 0px 0.5px #696969;
 }
 
 .color-picker-colors {

@@ -84,7 +84,7 @@ export default defineComponent({
   font-family: monospace;
   color: #eee;
   pointer-events: none;
-  border-radius: 6px;
+  border-radius: 0.5rem;
 }
 .highlight {
   box-shadow: 0 0 0px 1.5px white;
