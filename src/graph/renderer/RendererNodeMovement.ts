@@ -189,8 +189,7 @@ export class RendererNodeMovement {
     console.log("bounding", bounding.width, viewBoxSplit[2]);
     const positions = Utils.convertPixelToUnit(
       viewBoxSplit,
-      bounding.width,
-      bounding.height,
+      bounding,
       this.pointerPos.x - svgBounding.width / 2,
       this.pointerPos.y - svgBounding.height / 2
     );
@@ -218,8 +217,7 @@ export class RendererNodeMovement {
     const viewBoxSplit = viewBox.split(" ").map((el) => parseFloat(el));
     const [ distX, distY ] = Utils.convertPixelDistanceToUnit(
       viewBoxSplit,
-      bounding.width,
-      bounding.height,
+      bounding,
       [ this.pointerPos.x - this.startDragPos.x,
         this.pointerPos.y - this.startDragPos.y ]
     );

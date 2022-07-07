@@ -8,6 +8,7 @@ import * as Utils from "./utils";
 import {RendererNodeMovement} from "./RendererNodeMovement";
 import GraphNode from "../../components/GraphNode.vue";
 import {createApp } from "vue";
+import { posix } from "path";
 
 interface IncomingLink {
   link: Link,
@@ -157,8 +158,7 @@ export class RendererNode {
     container.style.width = "100%";
     const divBounding = div.getBoundingClientRect();
     const [ width, height ] = Utils.convertPixelDistanceToUnit(viewBoxSplit,
-      bounding.width,
-      bounding.height,
+      bounding,
       [ divBounding.width, divBounding.height ]);
     container.setAttribute("width", `${width + 4}`);
     container.setAttribute("height", `${height + 4}`);
@@ -166,8 +166,7 @@ export class RendererNode {
     container.style.width = "";
     const [ x, y ] = Utils.convertPixelToUnit(
       viewBoxSplit,
-      bounding.width,
-      bounding.height,
+      bounding,
       positionPixel.x - divBounding.width / 2,
       positionPixel.y - divBounding.height / 2
     );
@@ -254,13 +253,13 @@ export class RendererNode {
   addIncomingLink(link: Link, input: BaseInput) {
     console.log("addIncoming", link);
     this.incomingLinks.push({ link, input });
-    this.emitter.emit('addLink', link);
+    this.emitter.emit("addLink", link);
   }
 
   addOutgoingLink(link: Link, output: BaseOutput) {
     console.log("addOutgoing", link);
     this.outgoingLinks.push({ link, output });
-    this.emitter.emit('addLink', link);
+    this.emitter.emit("addLink", link);
   }
 
   fixLink(obj: LinkElement) {

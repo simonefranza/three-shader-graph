@@ -62,7 +62,6 @@ export class Link {
     this.emitter = emitter;
     this.startPosition = { x : startPosition.x, y : startPosition.y };
     this.endPosition = { x : endPosition.x, y : endPosition.y };
-    console.log("end", this.endPosition);
     if (startElement !== undefined && startElement !== null) {
       this.startElement = startElement;
       this.startElement.setAttribute("data-state", DOMState.Busy);
@@ -261,7 +260,6 @@ export class Link {
     }
     this.startElement.setAttribute("data-state", "linked");
     this.endElement.setAttribute("data-state", "linked");
-    console.log(this.endElement);
     this.startNode.addOutgoingLink(this, this.startOutput);
     this.endNode.addIncomingLink(this, this.endInput);
     this.startOutput.connectTo(this.endInput);
@@ -280,6 +278,7 @@ export class Link {
     if (this.startElement === undefined) {
       throw "[Link] startElement is undefined";
     }
+    const boundingCanvas = this.canvas.getBoundingClientRect();
     const boundingStart = this.startElement.getBoundingClientRect();
     const boundingEnd = this.endElement.getBoundingClientRect();
     const distances = this.convertCanvasDistances([
@@ -287,6 +286,8 @@ export class Link {
       boundingStart.height / 2,
       boundingEnd.width / 2,
       boundingEnd.height / 2,
+      boundingCanvas.top,
+      boundingCanvas.left
     ]);
     const positions = this.convertCanvasPosition([
       { x : boundingStart.left, y : boundingStart.top },
@@ -310,8 +311,7 @@ export class Link {
     positions.forEach((pos) => {
       const [ x, y ] = Utils.convertPixelToUnit(
         viewBoxSplit,
-        bounding.width,
-        bounding.height,
+        bounding,
         pos.x,
         pos.y
       );
@@ -329,8 +329,7 @@ export class Link {
     const viewBoxSplit = viewBox.split(" ").map((el) => parseFloat(el));
     const res = Utils.convertPixelDistanceToUnit(
       viewBoxSplit,
-      bounding.width,
-      bounding.height,
+      bounding,
       distances
     );
     return [ ...res ];

@@ -2,7 +2,6 @@ import * as THREE from "three";
 import Stats from "stats.js";
 import { Events } from "./Manager";
 import {Emitter} from "mitt";
-import { warn } from "vue";
 
 export class Scene {
   height: number;
@@ -40,7 +39,8 @@ export class Scene {
     div.style.width = "100%";
     div.style.height = "100%";
     this.stats = new Stats();
-    this.stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+    // 0: fps, 1: ms, 2: mb, 3+: custom
+    this.stats.showPanel( 0 );
     this.stats.dom.style.position = "relative";
     this.stats.dom.style.right = "0";
     this.stats.dom.style.left = "";
@@ -48,7 +48,6 @@ export class Scene {
     this.stats.dom.style.justifyContent = "flex-end";
     this.canvas.parentNode.appendChild(div);
     div.appendChild(this.stats.dom);
-
 
 
     this.emitter = emitter;

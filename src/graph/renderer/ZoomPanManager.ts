@@ -53,8 +53,20 @@ export class ZoomPanManager {
         throw "[ZoomPanManager::handleResize] viewBox is null";
       }
       const viewBoxSplit = viewBox.split(" ").map((el) => parseFloat(el));
+      //const viewBoxLeftOld = viewBoxSplit[0];
+      const widthUnitsOld = this.widthUnits;
+      const heightUnitsOld = this.heightUnits;
       this.widthUnits *= (bounding.width / this.widthPx);
       this.heightUnits *= (bounding.height / this.heightPx);
+      const noWidthDiff = Math.abs(widthUnitsOld - this.widthUnits) < 0.0000001;
+      const noHeightDiff = Math.abs(heightUnitsOld - this.heightUnits) < 0.0000001;
+      if (noWidthDiff && !noHeightDiff) {
+        // Height resize
+        const viewBoxTopOld = viewBoxSplit[1];
+        const viewBoxHeightOld = viewBoxSplit[3];
+        const viewBoxBottomOld = viewBoxTopOld + viewBoxHeightOld;
+        viewBoxSplit[1] = viewBoxBottomOld - this.heightUnits;
+      }
       viewBoxSplit[2] = this.widthUnits;
       viewBoxSplit[3] = this.heightUnits;
       this.canvas.setAttribute("viewBox", viewBoxSplit.join(" "));
@@ -95,8 +107,7 @@ export class ZoomPanManager {
     const bounding = this.canvas.getBoundingClientRect();
     const positions = Utils.convertPixelToUnit(
       viewBoxSplit,
-      bounding.width,
-      bounding.height,
+      bounding,
       this.pointerPos.x,
       this.pointerPos.y
     );
@@ -118,6 +129,7 @@ export class ZoomPanManager {
     viewBoxSplit[1] += centerY;
 
     this.widthUnits = viewBoxSplit[2];
+    this.heightUnits = viewBoxSplit[3];
 
     this.canvas.setAttribute("viewBox", viewBoxSplit.join(" "));
     this.checkTimeout();
