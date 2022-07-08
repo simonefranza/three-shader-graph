@@ -2,6 +2,9 @@
   <span class="">
     <div class="shader-node-title">{{title}}</div>
     <div class="shader-node-body">
+      <div v-if ="title === 'ColorRamp'">
+        <GradientPicker></GradientPicker>
+      </div>
       <div
         v-for="output in outputs"
         :key="output.getName()"
@@ -37,11 +40,13 @@ import { BaseInput } from "../graph/nodes/BaseInput";
 import { RendererNode } from "../graph/renderer/RendererNode";
 import InputComponent from "./InputComponent.vue";
 import OutputComponent from "./OutputComponent.vue";
+import GradientPicker from "./GradientPicker.vue";
 
 export default defineComponent({
   components: {
     InputComponent,
     OutputComponent,
+    GradientPicker,
   },
   props: {
     title : {
@@ -64,7 +69,7 @@ export default defineComponent({
       type: Object as PropType<Emitter<Events>>,
       required: true,
     }
-  }
+  },
 });
 </script>
 

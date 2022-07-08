@@ -8,6 +8,37 @@
         <div ref="barSelector" class="color-picker-bar-selector"></div>
       </div>
     </div>
+    <div class="color-picker-space-container">
+      <div class="color-picker-space">
+        <div 
+          @click="colorSpace = 'HSV'"
+          :class="['color-picker-space-el', {selected : colorSpace === 'HSV'}]"
+        >
+          <p>HSV</p>
+        </div>
+        <div
+          @click="colorSpace = 'RGB'"
+          :class="['color-picker-space-el', {selected : colorSpace === 'RGB'}]"
+        >
+          <p>RGB</p>
+        </div>
+        <div
+          @click="colorSpace = 'HEX'"
+          :class="['color-picker-space-el', {selected : colorSpace === 'HEX'}]"
+        >
+          <p>HEX</p>
+        </div>
+      </div>
+    </div>
+    <div class="color-picker-value-container">
+      <div class="color-picker-value">
+        <div v-for="(value, idx) in stringComponentValues" :key="idx" 
+          class="color-picker-value-el">
+          <input type="text" v-model="stringComponentValues[idx]"/>
+          <p>{{componentNames[idx]}}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -23,6 +54,10 @@ export default defineComponent({
       value: 1,
       alpha : 1,
       canvas : document.getElementById("renderer-canvas"),
+      colorSpace : "",
+      componentNames : ["H", "S", "V", "A"],
+      componentValues : [0, 0, 0, 1],
+      stringComponentValues : ["0", "0", "0", "1"],
     };
   },
   props: {
@@ -30,6 +65,8 @@ export default defineComponent({
       type: Object as PropType<Vector4>,
       required: true,
     },
+  },
+  computed: {
   },
   methods: {
     handlePointerDownWheel(e : PointerEvent) {
@@ -145,13 +182,14 @@ export default defineComponent({
         angle = Math.atan(left/top);
       }
       console.log("final angle", angle * 180 / Math.PI);
-      this.hue = angle * 180 / Math.PI;
-      this.saturation = len;
+      this.hue = this.clamp(0, 360, angle * 180 / Math.PI);
+      this.saturation = this.clamp(0, 1, len);
       const bar = (<HTMLElement>this.$refs.bar);
       const barBounding = bar.getBoundingClientRect();
       const barSelector = (<HTMLElement>this.$refs.barSelector);
       const {top : topValue} = this.scaleOffsetFromPixels(parseFloat(barSelector.style.top));
-      this.value = 1 - topValue / barBounding.height;
+      this.value = this.clamp(0, 1, 1 - topValue / barBounding.height);
+      this.updateComponentValues();
     },
     handlePointerUpWheel(e : PointerEvent) {
       this.moveWheelSelector(e);
@@ -221,6 +259,34 @@ export default defineComponent({
           v: v
       };
     },
+    // h 0 <=360, s,v,a 0<=1
+    hsvToRgb(H : number, S : number, V : number) {
+      if (H < 0 || H >= 360) {
+        throw "[hsvToRgb] H value invalid: " + H;
+      } else if (S < 0 || S > 1) {
+        throw "[hsvToRgb] S value invalid: " + S;
+      } else if (V < 0 || V > 1) {
+        throw "[hsvToRgb] V value invalid: " + V;
+      }
+      const C = V * S;
+      const X = C * (1 - Math.abs(((H / 60) % 2) - 1));
+      const m = V - C;
+      let R_, G_, B_;
+      if (H < 60) {
+        [R_, G_, B_] = [C, X, 0];
+      } else if (H < 120) {
+        [R_, G_, B_] = [X, C, 0];
+      } else if (H < 180) {
+        [R_, G_, B_] = [0, C, X];
+      } else if (H < 240) {
+        [R_, G_, B_] = [0, X, C];
+      } else if (H < 300) {
+        [R_, G_, B_] = [X, 0, C];
+      } else {
+        [R_, G_, B_] = [C, 0, X];
+      }
+      return [(R_ + m) * 255, (G_ + m) * 255, (B_ + m) * 255];
+    },
     scaleOffsetToPixels(top : number, left ?: number) : {left : number, top : number} {
       if (this.canvas === null) {
         throw "[ColorPicker::scaleOffsetToPixels] canvas is null";
@@ -285,8 +351,78 @@ export default defineComponent({
       wheelSelector.style.left = `${leftWheel}px`;
       wheelSelector.style.top = `${topWheel}px`;
     },
+    updateStringComponentValues() {
+      switch(this.colorSpace) {
+        case "HSV":
+          this.componentValues.forEach((el : number, idx : number) => {
+            if (idx > 0 && idx < 3) {
+              this.stringComponentValues[idx] = el.toString() + "%";
+            } else {
+              this.stringComponentValues[idx] = el.toString();
+            }
+          });
+          break;
+        case "RGB":
+          this.componentValues.forEach((el : number, idx : number) => {
+            this.stringComponentValues[idx] = el.toString();
+          });
+          break;
+        case "HEX":
+          for (let i = 0; i < 3; i ++) {
+            this.stringComponentValues[i] = this.componentValues[i].toString(16).toUpperCase();
+          }
+          this.stringComponentValues[3] = this.componentValues[3].toString();
+          break;
+        case "":
+          break;
+        default:
+          throw "[colorSpace] Unknown color space";
+      }
+    },
+    updateComponentValues() {
+      switch (this.colorSpace) {
+        case "HSV":
+          this.componentValues = [this.hue, this.saturation, this.value, this.alpha];
+          this.componentValues[0] = Math.floor(this.hue);
+          this.componentValues[1] = Math.floor(this.saturation * 100);
+          this.componentValues[2] = Math.floor(this.value * 100);
+          break;
+        case "HEX":
+        case "RGB":
+          const components = this.hsvToRgb(this.hue, this.saturation, this.value);
+          this.componentValues = [...components, this.alpha];
+          this.componentValues.forEach((el, idx) => {
+            this.componentValues[idx] = Math.floor(el);
+          });
+          break;
+        case "":
+          break;
+        default:
+        throw "[colorSpace] Unknown color space";
+      }
+      this.updateStringComponentValues();
+    },
+    clamp(min : number, max: number, value : number) {
+      return Math.min(Math.max(min, value), max);
+    },
   },
   watch: {
+    colorSpace() {
+      switch (this.colorSpace) {
+        case "HSV":
+          this.componentNames = ["H", "S", "V", "A"];
+          break;
+        case "HEX":
+        case "RGB":
+          this.componentNames = ["R", "G", "B", "A"];
+          break;
+        case "":
+          break;
+        default:
+        throw "[colorSpace] Unknown color space";
+      }
+      this.updateComponentValues();
+    },
     hue() {
       this.$emit("newColor", this.genColor());
     },
@@ -304,6 +440,9 @@ export default defineComponent({
       .addEventListener("pointerdown", this.handlePointerDownBar);
     (<HTMLElement>this.$refs.barSelector).style.top = "0";
     this.setSelector();
+    this.getWheelCoordinates();
+    this.colorSpace = "HSV";
+    this.updateComponentValues();
   }
 })
 </script>
@@ -312,11 +451,12 @@ export default defineComponent({
 .color-picker-container {
   position: absolute;
   transform: translate(-50%, 00%);
-  background-color: #111;
+  background-color: #252525;
   border-radius: 5px;
   left: 50%;
   bottom: 100%;
   box-shadow: 0px 0px 0px 0.5px #696969;
+  min-width: 250px;
 }
 
 .color-picker-colors {
@@ -380,6 +520,86 @@ export default defineComponent({
     border-radius: 3px;
     background-color: white;
     position: absolute;
+  }
+}
+
+.color-picker-space-container,
+.color-picker-value-container {
+  width: 100%;
+  position: relative;
+  padding-inline: 1rem;
+  padding-block: 0.5rem;
+  box-sizing: border-box;
+}
+.color-picker-space {
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: stretch;
+  align-items: center;
+  border-radius: 0.5rem;
+  outline: 0.5px solid #696969;
+  &-el:first-child {
+    border-radius: 0.5rem 0 0 0.5rem;
+  }
+  &-el:not(:first-child):not(:last-child)::after,
+  &-el:not(:first-child):not(:last-child)::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 0.5px;
+    background-color: #696969;
+    top: 0;
+  }
+  &-el:not(:first-child):not(:last-child)::before {
+    transform: translate(-50%, 0);
+  }
+  &-el:not(:first-child):not(:last-child)::after {
+    right: 0;
+    transform: translate(50%, 0);
+  }
+  &-el {
+    width: 100%;
+    position: relative;
+    cursor: pointer;
+  }
+  &-el:last-child {
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+  &-el p {
+    margin: 0.5rem;
+    text-align: center;
+  }
+  &-el.selected{
+    background-color: blueviolet;
+  }
+}
+.color-picker-value {
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: stretch;
+  align-items: center;
+  border-radius: 0.5rem;
+  &-el {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  &-el p {
+    margin-block: 0.5rem;
+  }
+  &-el input {
+    width: 83%;
+    line-height: 1.6rem;
+    text-align: center;
+    color: #eee;
+    background: #111111;
+    font-family: monospace;
+    outline: 0.5px solid #696969;
+    border: none;
+    border-radius: 0.15rem;
   }
 }
 </style>
