@@ -1,5 +1,5 @@
 <template>
-  <div class="color-picker-container"> 
+  <div ref="container" class="color-picker-container"> 
     <div class="color-picker-colors">
       <div ref="wheel" class="color-picker-wheel">
         <div ref="wheelSelector" class="color-picker-wheel-selector"></div>
@@ -65,6 +65,11 @@ export default defineComponent({
       type: Object as PropType<Vector4>,
       required: true,
     },
+    showBelow: {
+      type : Boolean,
+      required: false,
+      default: false,
+    }
   },
   computed: {
   },
@@ -95,7 +100,6 @@ export default defineComponent({
       document.addEventListener("pointerup", this.handlePointerUpBar);
     },
     moveWheelSelector(e : PointerEvent) {
-      console.log("move");
       const wheel = <HTMLElement>this.$refs.wheel;
       const bounding = wheel.getBoundingClientRect();
       const radius = bounding.width / 2;
@@ -162,10 +166,8 @@ export default defineComponent({
       );
       const top = 1 - scaledTop / radius;
       const left = scaledLeft / radius - 1;
-      console.log("coord", top, left);
       const len = Math.sqrt(left * left + top * top);
       let angle = 0;
-      console.log("angle", Math.atan(left/top));
       if (top === 0 && left === 0) {
         angle = 0;
       } else if (top >= 0 && left >= 0) {
@@ -181,8 +183,10 @@ export default defineComponent({
         // top < 0 left < 0
         angle = Math.atan(left/top);
       }
-      console.log("final angle", angle * 180 / Math.PI);
       this.hue = this.clamp(0, 360, angle * 180 / Math.PI);
+      if (this.hue === 360) {
+        this.hue = 0;
+      }
       this.saturation = this.clamp(0, 1, len);
       const bar = (<HTMLElement>this.$refs.bar);
       const barBounding = bar.getBoundingClientRect();
@@ -201,12 +205,45 @@ export default defineComponent({
       document.removeEventListener("pointermove", this.handlePointerMoveBar);
       document.removeEventListener("pointerup", this.handlePointerUpBar);
     },
-    genColor() {
-      //console.log({h:this.hue,s:this.saturation,v: this.value});
-      const [h, s, l] = this.hsvToHsl(this.hue, this.saturation, this.value);
-      return `hsl(${h.toFixed(2)}deg, ${s * 100}%, ${l * 100}%)`;
+    genColorStringHex(r : number, g : number, b : number, a : number) {
+      if (r < 0 || r > 255) {
+        throw "[genColorStringHex] r is invalid: " + r;
+      } else if (g < 0 || g > 255) {
+        throw "[genColorStringHex] g is invalid: " + g;
+      } else if (b < 0 || b > 255) {
+        throw "[genColorStringHex] b is invalid: " + b;
+      } else if (a < 0 || a > 1) {
+        throw "[genColorStringHex] a is invalid: " + a;
+      }
+      return `#${Math.round(r).toString(16)}` +
+        `${Math.round(g).toString(16)}${Math.round(b).toString(16)}` +
+        `${Math.round(a * 255).toString(16)}`;
     },
-    hsvToHsl(h : number, s : number, v : number) {
+    genColorStringRgba(r : number, g : number, b : number, a : number) {
+      if (r < 0 || r > 255) {
+        throw "[genColorStringRgba] r is invalid: " + r;
+      } else if (g < 0 || g > 255) {
+        throw "[genColorStringRgba] g is invalid: " + g;
+      } else if (b < 0 || b > 255) {
+        throw "[genColorStringRgba] b is invalid: " + b;
+      } else if (a < 0 || a > 1) {
+        throw "[genColorStringRgba] a is invalid: " + a;
+      }
+      return `rgba(${r}, ${g}, ${b}, ${a * 100}%)`;
+    },
+    genColorStringHsla(h : number, s : number, l : number, a : number) {
+      if (h < 0 || h >= 360) {
+        throw "[genColorStringHsla] h is invalid: " + h;
+      } else if (s < 0 || s > 1) {
+        throw "[genColorStringHsla] s is invalid: " + s;
+      } else if (l < 0 || l > 1) {
+        throw "[genColorStringHsla] l is invalid: " + l;
+      } else if (a < 0 || a > 1) {
+        throw "[genColorStringHsla] a is invalid: " + a;
+      }
+      return `hsla(${h.toFixed(2)}deg, ${(s * 100).toFixed(2)}%, ${(l * 100).toFixed(2)}%, ${(a * 100).toFixed(2)}%)`;
+    },
+    hsvToHsl(h : number, s : number, v : number) : [number, number, number] {
       // both hsv and hsl values are in [0, 1]
       let l = (2 - s) * v / 2;
       if (l != 0) {
@@ -218,9 +255,13 @@ export default defineComponent({
             s = s * v / (2 - l * 2);
         }
       }
-      return [h, s, l];
+      let hue = this.clamp(0, 360, h);
+      if (hue === 360) {
+        hue = 0;
+      }
+      return [hue, this.clamp(0, 1, s), this.clamp(0, 1, l)];
     },
-    rgb2hsv (r : number, g : number, b : number) {
+    rgb2hsv (r : number, g : number, b : number) : [number, number, number] {
       //https://stackoverflow.com/questions/8022885/rgb-to-hsv-color-in-javascript
       let rabs, gabs, babs, rr, gg, bb, h, s, v : number, diff : number, diffc;
       rabs = r;
@@ -253,14 +294,10 @@ export default defineComponent({
               h -= 1;
           }
       }
-      return {
-          h: h * 360,
-          s: s,
-          v: v
-      };
+      return [ h * 360, s, v ];
     },
     // h 0 <=360, s,v,a 0<=1
-    hsvToRgb(H : number, S : number, V : number) {
+    hsvToRgb(H : number, S : number, V : number) : [number, number, number] {
       if (H < 0 || H >= 360) {
         throw "[hsvToRgb] H value invalid: " + H;
       } else if (S < 0 || S > 1) {
@@ -323,7 +360,7 @@ export default defineComponent({
       let r = this.defaultValue.x;
       let g = this.defaultValue.y;
       let b = this.defaultValue.z;
-      let {h, s, v} = this.rgb2hsv(r, g, b);
+      let [h, s, v] = this.rgb2hsv(r, g, b);
       console.log({h,s,v});
       //this.hue = h;
       //this.saturation = s;
@@ -401,9 +438,44 @@ export default defineComponent({
         throw "[colorSpace] Unknown color space";
       }
       this.updateStringComponentValues();
+      this.emitNewColor();
+    },
+    emitNewColor() {
+      const hsvData : [number, number, number] = [this.hue, this.saturation, this.value];
+      const hslData : [number, number, number, number] = [...this.hsvToHsl(...hsvData), this.alpha];
+      const rgbData : [number, number, number, number] = [...this.hsvToRgb(...hsvData), this.alpha];
+      this.$emit("newColorRawRgb", rgbData);
+      this.$emit("newColorRawHsl", hslData);
+      this.$emit("newColorRawHsv", [...hsvData, this.alpha]);
+      this.$emit("newColorStringRgb", this.genColorStringRgba(...rgbData));
+      this.$emit("newColorStringHex", this.genColorStringHex(...rgbData));
+      this.$emit("newColorStringHsl", this.genColorStringHsla(...hslData));
     },
     clamp(min : number, max: number, value : number) {
       return Math.min(Math.max(min, value), max);
+    },
+    handlePointerDownClosing(e : PointerEvent) {
+      const container = <HTMLElement>this.$refs.container;
+      const bounding = container.getBoundingClientRect();
+      if (e.clientX >= bounding.left && e.clientX <= bounding.right
+        && e.clientY >= bounding.top && e.clientY <= bounding.bottom) {
+        return;
+      }
+      e.cancelBubble = true;
+      e.preventDefault();
+    },
+    handlePointerUpClosing(e : PointerEvent) {
+      const container = <HTMLElement>this.$refs.container;
+      const bounding = container.getBoundingClientRect();
+      if (e.clientX >= bounding.left && e.clientX <= bounding.right
+        && e.clientY >= bounding.top && e.clientY <= bounding.bottom) {
+        return;
+      }
+      e.cancelBubble = true;
+      e.preventDefault();
+      this.$nextTick(() => {
+        this.$emit("closeMe");
+      });
     },
   },
   watch: {
@@ -424,26 +496,39 @@ export default defineComponent({
       this.updateComponentValues();
     },
     hue() {
-      this.$emit("newColor", this.genColor());
     },
-    saturation() {
-      this.$emit("newColor", this.genColor());
-    },
-    value() {
-      this.$emit("newColor", this.genColor());
-    },
+    //saturation() {
+    //  this.$emit("newColor", this.genColor());
+    //},
+    //value() {
+    //  this.$emit("newColor", this.genColor());
+    //},
   },
   mounted() {
+    const container = <HTMLElement>this.$refs.container;
+    if (this.showBelow) {
+      container.style.bottom = "auto";
+      container.style.top = "100%";
+    }
     (<HTMLElement>this.$refs.wheel)
       .addEventListener("pointerdown", this.handlePointerDownWheel);
     (<HTMLElement>this.$refs.bar)
       .addEventListener("pointerdown", this.handlePointerDownBar);
+    document.addEventListener("pointerdown", this.handlePointerDownClosing);
+    document.addEventListener("pointerup", this.handlePointerUpClosing);
     (<HTMLElement>this.$refs.barSelector).style.top = "0";
     this.setSelector();
     this.getWheelCoordinates();
     this.colorSpace = "HSV";
-    this.updateComponentValues();
-  }
+  },
+  beforeUnmount() {
+    (<HTMLElement>this.$refs.wheel)
+      .removeEventListener("pointerdown", this.handlePointerDownWheel);
+    (<HTMLElement>this.$refs.bar)
+      .removeEventListener("pointerdown", this.handlePointerDownBar);
+    document.removeEventListener("pointerdown", this.handlePointerDownClosing);
+    document.removeEventListener("pointerup", this.handlePointerUpClosing);
+  },
 })
 </script>
   
@@ -457,6 +542,7 @@ export default defineComponent({
   bottom: 100%;
   box-shadow: 0px 0px 0px 0.5px #696969;
   min-width: 250px;
+  z-index: 10;
 }
 
 .color-picker-colors {

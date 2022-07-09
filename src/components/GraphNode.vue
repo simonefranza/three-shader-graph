@@ -2,8 +2,11 @@
   <span class="">
     <div class="shader-node-title">{{title}}</div>
     <div class="shader-node-body">
-      <div v-if ="title === 'ColorRamp'">
-        <GradientPicker></GradientPicker>
+      <div v-if ="title === 'ColorRamp'" class="shader-node-additional">
+        <GradientPicker
+          :baseNode="baseNode"
+          :emitter="emitter"
+        ></GradientPicker>
       </div>
       <div
         v-for="output in outputs"
@@ -37,6 +40,7 @@ import {Emitter} from "mitt";
 import {Events} from "../graph/Manager";
 import { BaseOutput } from "../graph/nodes/BaseOutput";
 import { BaseInput } from "../graph/nodes/BaseInput";
+import { BaseNode } from "../graph/nodes/BaseNode";
 import { RendererNode } from "../graph/renderer/RendererNode";
 import InputComponent from "./InputComponent.vue";
 import OutputComponent from "./OutputComponent.vue";
@@ -49,6 +53,10 @@ export default defineComponent({
     GradientPicker,
   },
   props: {
+    baseNode : {
+      type : Object as PropType<BaseNode>,
+      required : true,
+    },
     title : {
       type: String,
       required: true,
@@ -116,7 +124,8 @@ export default defineComponent({
   text-transform: capitalize;
 }
 .shader-node-output,
-.shader-node-input {
+.shader-node-input,
+.shader-node-additional {
   padding-inline: 20px;
   padding-block: 5px;
   position: relative;

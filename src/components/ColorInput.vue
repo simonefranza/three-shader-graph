@@ -5,12 +5,14 @@
       v-if="!isConnected"
       ref="inputActive"
       class="shader-node-number-input-active"
-      @pointerup="() => { toggleState(); }"
+      :style="{backgroundColor : color}"
+      @pointerup="togglePicker"
       >
     </span>
     <ColorPicker ref="colorPicker" v-if="state === State.Active" 
       :defaultValue="startValue"
-      @newColor="updateColor"></ColorPicker>
+      @closeMe="togglePicker"
+      @newColorStringHsl="updateColor"></ColorPicker>
   </div>
 </template>
 
@@ -33,7 +35,6 @@ export default defineComponent({
       color: "",
       state: State.Init,
       State,
-      justActivated : false,
       isConnected : false,
       startValue: new Vector4(1, 1, 1, 1),
     };
@@ -65,8 +66,9 @@ export default defineComponent({
       return [f(0), f(8), f(4)];
     },
     updateColor(newColor : string) {
+    console.log("new Color", newColor);
       this.color = newColor;
-      (<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.color;
+      //(<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.color;
       const split = newColor.split("(");
       const split2 = split[1].split(")");
       const split3 = split2[0].split(",");
@@ -78,34 +80,17 @@ export default defineComponent({
       this.startValue = this.input.getValue().value;
       this.emitter.emit("recompile");
     },
-    toggleState() {
+    togglePicker(e : PointerEvent) {
       if (this.state === State.Init) {
         this.state = State.Active;
-        this.justActivated = true;
-        document.addEventListener("pointerdown", this.handlePointerDown);
+        e.cancelBubble = true;
       } else {
         this.$nextTick(() => {
           this.state = State.Init;
-          document.removeEventListener("pointerdown", this.handlePointerDown);
         });
       }
     },
-    setInit() {
-
-    },
-    handlePointerDown(e : PointerEvent) {
-      const bounding = (<HTMLElement>this.$refs.colorPicker.$el).getBoundingClientRect();
-      let x = e.clientX;
-      let y = e.clientY;
-      const boundingActive = (<HTMLElement>this.$refs.inputActive).getBoundingClientRect();
-      if (x >= boundingActive.left && x <= boundingActive.left + boundingActive.width && 
-        y >= boundingActive.top && y <= boundingActive.top + boundingActive.height) {
-        return;
-      }
-      if (x < bounding.left || x > bounding.left + bounding.width || y < bounding.top ||
-        y > bounding.top + bounding.height) {
-        this.toggleState();
-      }
+    hidePicker() {
     },
     checkIsConnected() {
       this.isConnected = this.input.isConnected();

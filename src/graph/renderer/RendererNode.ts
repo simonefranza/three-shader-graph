@@ -134,6 +134,7 @@ export class RendererNode {
     const graphNode = createApp(
       GraphNode,
       {
+        baseNode : this.graphNode,
         title : name,
         outputs,
         inputs,

@@ -103,7 +103,7 @@ export class Scene {
 
   updateShaders([ vertShader, fragShader ] : [string, string]) {
     const material = <THREE.ShaderMaterial> this.mesh.material;
-    console.log(fragShader);
+    //console.log(fragShader);
     material.fragmentShader = fragShader;
     material.vertexShader = vertShader;
     material.needsUpdate = true;
