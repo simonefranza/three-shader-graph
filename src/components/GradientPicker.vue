@@ -4,12 +4,13 @@
     <div class="gradient-picker-gradient">
       <div ref="gradientBar" class="gradient-picker-gradient-bar">
         <GradientPick 
-          @click="selectedPicker = idx"
+          @pointerdown="selectedPicker = idx"
           v-for="(pick, idx) in pickers"
-          :key="pick.position"
+          :key="colors[idx]"
           :position="pick.position"
           :color="colors[idx]"
           :isSelected="selectedPicker === idx"
+          @newPosition="setPickerPosition"
         >
           </GradientPick>
       </div>
@@ -109,6 +110,11 @@ export default defineComponent({
       this.gradient?.setPickers([...this.pickers]);
       this.emitter.emit("recompile");
     },
+    //updatePickerPositions() {
+    //  this.pickers.forEach((pick, idx) => {
+    //    this.picksPosition[idx] = pick.position;
+    //  });
+    //},
     toggleColorPicker(e : PointerEvent) {
       if (!this.showColorPicker) {
         this.showColorPicker = true;
@@ -118,6 +124,18 @@ export default defineComponent({
           this.showColorPicker = false;
         });
       }
+    },
+    setPickerPosition(newPos : number) {
+      const tempPicker = this.pickers[this.selectedPicker];
+      this.pickers[this.selectedPicker].position = newPos;
+      this.pickers.sort((a, b) => {
+        return a.position - b.position;
+      });
+      this.selectedPicker = this.pickers.indexOf(tempPicker);
+      this.tempPickerPosition = (100 * newPos).toFixed(0);
+      this.updateGradient();
+      this.genColors();
+      this.updateGraphNode();
     },
   },
   watch: {

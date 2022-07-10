@@ -1,5 +1,7 @@
 <template>
   <div
+    ref="pickContainer"
+    @pointerdown="handlePointerDown"
     class="gradient-pick-container"
     :style="{left : stylePosition}"
   >
@@ -12,10 +14,14 @@
 </template>
 
 <script lang="ts">
-import { PropType, defineComponent } from 'vue'
-import { Picker } from "../graph/nodes/Gradient";
+import { defineComponent } from 'vue'
 
 export default defineComponent({
+  data() {
+    return {
+      gradientBar : undefined as HTMLElement | undefined,
+    };
+  },
   props: {
     color: {
       type : String,
@@ -35,6 +41,41 @@ export default defineComponent({
       return `${this.position * 100}%`;
     },
   },
+  methods: {
+    computePickerPosition(e : PointerEvent) {
+      const bounding = this.gradientBar!.getBoundingClientRect();
+      let left = 0;
+      if (e.clientX < bounding.left) {
+        left = 0;
+      } else if (e.clientX > bounding.right) {
+        left = 1;
+      } else {
+        const distFromLeft = e.clientX - bounding.left;
+        left = distFromLeft / bounding.width;
+      }
+      //const container = <HTMLElement>this.$refs.pickContainer;
+      //container.style.left = `${left * 100}%`;
+      return left;
+    },
+    handlePointerDown() {
+      document.addEventListener("pointermove", this.handlePointerMove);
+      document.addEventListener("pointerup", this.handlePointerUp);
+    },
+    handlePointerMove(e : PointerEvent) {
+      const left = this.computePickerPosition(e);
+      this.$emit("newPosition", left);
+    },
+    handlePointerUp(e : PointerEvent) {
+      const left = this.computePickerPosition(e);
+      this.$emit("newPosition", left);
+      document.removeEventListener("pointermove", this.handlePointerMove);
+      document.removeEventListener("pointerup", this.handlePointerUp);
+    },
+  },
+  mounted() {
+    const container = <HTMLElement>this.$refs.pickContainer;
+    this.gradientBar = <HTMLElement>container.parentNode;
+  }
 })
 </script>
 

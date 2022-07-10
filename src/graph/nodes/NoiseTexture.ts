@@ -279,9 +279,6 @@ float fbm(
     const fVar = frag.generateVariableID("nt_f_");
     const finalColor = frag.generateVariableID("nt_color_");
     frag.addAllToFunctions(this.noiseFunction);
-    console.log("roughness", super.formatValue(roughnessValue.value));
-    console.log("octave", super.formatValue(Math.floor(detailValue.value + 1)));
-    console.log("octave frac", super.formatValue(detailValue.value % 1));
     frag.addToMain(`
     vec3 ${stVar} = projPosition;
     // Scale the space in order to see the function
