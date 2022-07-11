@@ -34,7 +34,10 @@
       <div class="color-picker-value">
         <div v-for="(value, idx) in stringComponentValues" :key="idx" 
           class="color-picker-value-el">
-          <input type="text" v-model="stringComponentValues[idx]"/>
+          <input-field
+            :value="stringComponentValues[idx]"
+            @newValue="(newVal) => setNewValue(newVal, idx)"
+            ></input-field>
           <p>{{componentNames[idx]}}</p>
         </div>
       </div>
@@ -45,6 +48,7 @@
 <script lang="ts">
 import {Vector4}  from "three";
 import { PropType, defineComponent } from 'vue'
+import InputField from "./InputField.vue";
 
 export default defineComponent({
   data() {
@@ -71,7 +75,8 @@ export default defineComponent({
       default: false,
     }
   },
-  computed: {
+  components: {
+    InputField,
   },
   methods: {
     handlePointerDownWheel(e : PointerEvent) {
@@ -477,6 +482,55 @@ export default defineComponent({
         this.$emit("closeMe");
       });
     },
+    handleNewStringValueHSV(newVal : string, idx : number) {
+      switch(idx) {
+        case 0:
+          let tempInt = parseInt(newVal);
+          if (tempInt < 0) {
+            this.stringComponentValues[idx] = '0';
+            tempInt = 0;
+          } else if (tempInt >= 360) {
+            tempInt = tempInt % 360;
+            this.stringComponentValues[idx] = (tempInt % 360).toFixed(0);
+          } else {
+            this.stringComponentValues[idx] = tempInt.toFixed(0);
+          }
+          this.hue = tempInt;
+          break;
+        case 1:
+        case 2:
+          const tempVal = parseInt(newVal);
+          if (tempVal < 0) {
+            this.stringComponentValues[idx] = '0%';
+          } else if (tempVal >= 100) {
+            this.stringComponentValues[idx] = '100%';
+          } else {
+            this.stringComponentValues[idx] = tempVal.toFixed(0) + '%';
+          }
+          break;
+        default:
+          throw "[ColorPicker::handleNewStringValueHSV] Invalid Index";
+      }
+    },
+    handleNewStringValueRGB(newVal : string, idx : number) {
+    },
+    handleNewStringValueHEX(newVal : string, idx : number) {
+    },
+    setNewValue(newVal : string, idx : number) {
+      switch(this.colorSpace) {
+        case "HSV":
+          this.handleNewStringValueHSV(newVal, idx);
+          break;
+        case "RGB":
+          this.handleNewStringValueRGB(newVal, idx);
+          break;
+        case "HEX":
+          this.handleNewStringValueHEX(newVal, idx);
+          break;
+        default:
+          throw "[ColorPicker:setNewValue] Invalid colorSpace";
+      }
+    },
   },
   watch: {
     colorSpace() {
@@ -667,6 +721,7 @@ export default defineComponent({
   justify-content: stretch;
   align-items: center;
   border-radius: 0.5rem;
+  gap: 0.5rem;
   &-el {
     display: flex;
     flex-direction: column;
@@ -675,17 +730,6 @@ export default defineComponent({
   }
   &-el p {
     margin-block: 0.5rem;
-  }
-  &-el input {
-    width: 83%;
-    line-height: 1.6rem;
-    text-align: center;
-    color: #eee;
-    background: #111111;
-    font-family: monospace;
-    outline: 0.5px solid #696969;
-    border: none;
-    border-radius: 0.15rem;
   }
 }
 </style>

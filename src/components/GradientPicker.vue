@@ -20,7 +20,10 @@
         class="gradient-color-picker-position"
       >
         Pos
-        <input v-model="tempPickerPosition" />
+        <input-field 
+          :value="tempPickerPosition"
+          @newValue="setNewPosition"
+        ></input-field>
       </span>
       <span 
         class="gradient-color-picker-color"
@@ -45,12 +48,14 @@ import {Events} from "../graph/Manager";
 import { Gradient, Picker } from "../graph/nodes/Gradient";
 import GradientPick from "./GradientPick.vue";
 import ColorPicker from "./ColorPicker.vue";
+import InputField from "./InputField.vue";
 import {Vector4} from "three";
 
 export default defineComponent({
   components: {
     GradientPick,
-    ColorPicker
+    ColorPicker,
+    InputField,
   },
   data() {
     return {
@@ -137,6 +142,12 @@ export default defineComponent({
       this.genColors();
       this.updateGraphNode();
     },
+    setNewPosition(newVal : string) {
+      this.tempPickerPosition = Math.random().toString();
+      this.$nextTick(() => {
+        this.tempPickerPosition = newVal;
+      });
+    },
   },
   watch: {
     pickers() {
@@ -155,12 +166,15 @@ export default defineComponent({
         return;
       }
       const tempPicker = this.pickers[this.selectedPicker];
+      console.log(parseFloat(this.tempPickerPosition), 'pars');
       this.pickers[this.selectedPicker].position = Math.max(Math.min(parseFloat(this.tempPickerPosition) / 100, 1), 0);
       this.pickers.sort((a, b) => {
         return a.position - b.position;
       });
       this.selectedPicker = this.pickers.indexOf(tempPicker);
+      // To force watcher
       this.tempPickerPosition = (100 * this.pickers[this.selectedPicker].position).toFixed(0);
+      console.log("new temp", this.tempPickerPosition);
       this.updateGradient();
       this.genColors();
       this.updateGraphNode();
@@ -231,18 +245,5 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  & input {
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
-    border: none;
-    border-radius: 5px;
-    height: 1.35rem;
-    background-color: #252525;
-    color: #eee;
-    text-align: center;
-    font-family: monospace;
-    outline: none;
-  }
 }
 </style>
