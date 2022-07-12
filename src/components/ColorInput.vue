@@ -75,8 +75,14 @@ export default defineComponent({
       const h = parseFloat(split3[0]);
       const s = parseFloat(split3[1]);
       const l = parseFloat(split3[2]);
+      let a = 1;
+      if (split3.length === 4) {
+        console.log("parse", split[3]);
+        a = parseFloat(split3[3]) / 100;
+      }
       let rgb = this.HSLToRGB(h, s, l);
-      this.input.setValue(new Vector4(rgb[0], rgb[1], rgb[2],1));
+      console.log("value set colorinput",rgb[0], rgb[1], rgb[2],a);
+      this.input.setValue(new Vector4(rgb[0], rgb[1], rgb[2],a));
       this.startValue = this.input.getValue().value;
       this.emitter.emit("recompile");
     },
@@ -123,6 +129,15 @@ export default defineComponent({
     display: inline-block;
     background: red;
     border-radius: 5px;
+  position: relative;
+  &:before {
+    content: '';
+    width: 100%;
+    height: 100%;
+    background-color:white;
+    z-index: -1;
+    position: absolute;
+  }
 }
 .shader-node-number-color {
   width: 100%

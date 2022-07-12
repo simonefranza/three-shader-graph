@@ -49,19 +49,18 @@
 import {Vector4}  from "three";
 import { PropType, defineComponent } from 'vue'
 import InputField from "./InputField.vue";
+import { ColorSpace, Color } from "../graph/utils/Color";
+import { clamp } from "../graph/utils/General";
 
 export default defineComponent({
   data() {
     return {
-      hue : 0,
-      saturation : 100,
-      value: 1,
-      alpha : 1,
+      color : new Color(ColorSpace.HSV, 0, 0, 0, 0) as Color,
       canvas : document.getElementById("renderer-canvas"),
       colorSpace : "",
       componentNames : ["H", "S", "V", "A"],
-      componentValues : [0, 0, 0, 1],
-      stringComponentValues : ["0", "0", "0", "1"],
+      componentValues : [0, 0, 0, 100],
+      stringComponentValues : ["0", "0", "0", "100"],
     };
   },
   props: {
@@ -154,7 +153,8 @@ export default defineComponent({
         (<HTMLElement>this.$refs.barSelector).style.top = `${top}px`;
       }
       this.getWheelCoordinates();
-      (<HTMLElement>this.$refs.wheel).style.filter = `brightness(${this.value})`;
+      (<HTMLElement>this.$refs.wheel).style.filter = 
+        `brightness(${this.color.getHsv().z})`;
     },
     handlePointerMoveBar(e : PointerEvent) {
       this.moveBarSelector(e);
@@ -188,16 +188,18 @@ export default defineComponent({
         // top < 0 left < 0
         angle = Math.atan(left/top);
       }
-      this.hue = this.clamp(0, 360, angle * 180 / Math.PI);
-      if (this.hue === 360) {
-        this.hue = 0;
+      let hue = clamp(0, 360, angle * 180 / Math.PI);
+      if (hue === 360) {
+        hue = 0;
       }
-      this.saturation = this.clamp(0, 1, len);
+      const saturation = clamp(0, 1, len);
       const bar = (<HTMLElement>this.$refs.bar);
       const barBounding = bar.getBoundingClientRect();
       const barSelector = (<HTMLElement>this.$refs.barSelector);
       const {top : topValue} = this.scaleOffsetFromPixels(parseFloat(barSelector.style.top));
-      this.value = this.clamp(0, 1, 1 - topValue / barBounding.height);
+      const value = clamp(0, 1, 1 - topValue / barBounding.height);
+      console.log("sethsv", [hue, saturation, value]);
+      this.color.setHSV([hue, saturation, value]);
       this.updateComponentValues();
     },
     handlePointerUpWheel(e : PointerEvent) {
@@ -209,125 +211,6 @@ export default defineComponent({
       this.moveBarSelector(e);
       document.removeEventListener("pointermove", this.handlePointerMoveBar);
       document.removeEventListener("pointerup", this.handlePointerUpBar);
-    },
-    genColorStringHex(r : number, g : number, b : number, a : number) {
-      if (r < 0 || r > 255) {
-        throw "[genColorStringHex] r is invalid: " + r;
-      } else if (g < 0 || g > 255) {
-        throw "[genColorStringHex] g is invalid: " + g;
-      } else if (b < 0 || b > 255) {
-        throw "[genColorStringHex] b is invalid: " + b;
-      } else if (a < 0 || a > 1) {
-        throw "[genColorStringHex] a is invalid: " + a;
-      }
-      return `#${Math.round(r).toString(16)}` +
-        `${Math.round(g).toString(16)}${Math.round(b).toString(16)}` +
-        `${Math.round(a * 255).toString(16)}`;
-    },
-    genColorStringRgba(r : number, g : number, b : number, a : number) {
-      if (r < 0 || r > 255) {
-        throw "[genColorStringRgba] r is invalid: " + r;
-      } else if (g < 0 || g > 255) {
-        throw "[genColorStringRgba] g is invalid: " + g;
-      } else if (b < 0 || b > 255) {
-        throw "[genColorStringRgba] b is invalid: " + b;
-      } else if (a < 0 || a > 1) {
-        throw "[genColorStringRgba] a is invalid: " + a;
-      }
-      return `rgba(${r}, ${g}, ${b}, ${a * 100}%)`;
-    },
-    genColorStringHsla(h : number, s : number, l : number, a : number) {
-      if (h < 0 || h >= 360) {
-        throw "[genColorStringHsla] h is invalid: " + h;
-      } else if (s < 0 || s > 1) {
-        throw "[genColorStringHsla] s is invalid: " + s;
-      } else if (l < 0 || l > 1) {
-        throw "[genColorStringHsla] l is invalid: " + l;
-      } else if (a < 0 || a > 1) {
-        throw "[genColorStringHsla] a is invalid: " + a;
-      }
-      return `hsla(${h.toFixed(2)}deg, ${(s * 100).toFixed(2)}%, ${(l * 100).toFixed(2)}%, ${(a * 100).toFixed(2)}%)`;
-    },
-    hsvToHsl(h : number, s : number, v : number) : [number, number, number] {
-      // both hsv and hsl values are in [0, 1]
-      let l = (2 - s) * v / 2;
-      if (l != 0) {
-        if (l == 1) {
-            s = 0;
-        } else if (l < 0.5) {
-            s = s * v / (l * 2);
-        } else {
-            s = s * v / (2 - l * 2);
-        }
-      }
-      let hue = this.clamp(0, 360, h);
-      if (hue === 360) {
-        hue = 0;
-      }
-      return [hue, this.clamp(0, 1, s), this.clamp(0, 1, l)];
-    },
-    rgb2hsv (r : number, g : number, b : number) : [number, number, number] {
-      //https://stackoverflow.com/questions/8022885/rgb-to-hsv-color-in-javascript
-      let rabs, gabs, babs, rr, gg, bb, h, s, v : number, diff : number, diffc;
-      rabs = r;
-      gabs = g;
-      babs = b;
-      v = Math.max(rabs, gabs, babs),
-      diff = v - Math.min(rabs, gabs, babs);
-      diffc = (c : number) => (v - c) / 6 / diff + 1 / 2;
-      if (diff == 0) {
-          h = s = 0;
-      } else {
-          s = diff / v;
-          rr = diffc(rabs);
-          gg = diffc(gabs);
-          bb = diffc(babs);
-    
-          if (rabs === v) {
-              h = bb - gg;
-          } else if (gabs === v) {
-              h = (1 / 3) + rr - bb;
-          } else if (babs === v) {
-              h = (2 / 3) + gg - rr;
-          } else {
-            console.log({rabs, gabs, babs, v, r, g, b});
-            throw "[rgb2hsv] h is undefined";
-          }
-          if (h < 0) {
-              h += 1;
-          } else if (h > 1) {
-              h -= 1;
-          }
-      }
-      return [ h * 360, s, v ];
-    },
-    // h 0 <=360, s,v,a 0<=1
-    hsvToRgb(H : number, S : number, V : number) : [number, number, number] {
-      if (H < 0 || H >= 360) {
-        throw "[hsvToRgb] H value invalid: " + H;
-      } else if (S < 0 || S > 1) {
-        throw "[hsvToRgb] S value invalid: " + S;
-      } else if (V < 0 || V > 1) {
-        throw "[hsvToRgb] V value invalid: " + V;
-      }
-      const C = V * S;
-      const X = C * (1 - Math.abs(((H / 60) % 2) - 1));
-      const m = V - C;
-      let R_, G_, B_;
-      if (H < 60) {
-        [R_, G_, B_] = [C, X, 0];
-      } else if (H < 120) {
-        [R_, G_, B_] = [X, C, 0];
-      } else if (H < 180) {
-        [R_, G_, B_] = [0, C, X];
-      } else if (H < 240) {
-        [R_, G_, B_] = [0, X, C];
-      } else if (H < 300) {
-        [R_, G_, B_] = [X, 0, C];
-      } else {
-        [R_, G_, B_] = [C, 0, X];
-      }
-      return [(R_ + m) * 255, (G_ + m) * 255, (B_ + m) * 255];
     },
     scaleOffsetToPixels(top : number, left ?: number) : {left : number, top : number} {
       if (this.canvas === null) {
@@ -365,8 +248,7 @@ export default defineComponent({
       let r = this.defaultValue.x;
       let g = this.defaultValue.y;
       let b = this.defaultValue.z;
-      let [h, s, v] = this.rgb2hsv(r, g, b);
-      console.log({h,s,v});
+      let [h, s, v] = Color.rgbToHsv(r, g, b);
       //this.hue = h;
       //this.saturation = s;
       //this.value = v;
@@ -378,7 +260,6 @@ export default defineComponent({
       );
       barSelector.style.top = `${topBar}px`;
       const angle = h * Math.PI / 180;
-      console.log("angle", angle + Math.PI, h);
       const sin = Math.sin(angle + Math.PI / 2);
       const cos = Math.cos(angle + Math.PI / 2);
       const wheel = <HTMLElement>this.$refs.wheel;
@@ -424,18 +305,21 @@ export default defineComponent({
     updateComponentValues() {
       switch (this.colorSpace) {
         case "HSV":
-          this.componentValues = [this.hue, this.saturation, this.value, this.alpha];
-          this.componentValues[0] = Math.floor(this.hue);
-          this.componentValues[1] = Math.floor(this.saturation * 100);
-          this.componentValues[2] = Math.floor(this.value * 100);
+          const hsv = this.color.getHsv();
+          this.componentValues = [
+            Math.floor(hsv.x),
+            Math.floor(hsv.y * 100),
+            Math.floor(hsv.z * 100),
+            this.color.getAlpha()];
           break;
         case "HEX":
         case "RGB":
-          const components = this.hsvToRgb(this.hue, this.saturation, this.value);
-          this.componentValues = [...components, this.alpha];
-          this.componentValues.forEach((el, idx) => {
-            this.componentValues[idx] = Math.floor(el);
-          });
+          const rgb = this.color.getRgb();
+          this.componentValues = [
+            Math.floor(rgb.x),
+            Math.floor(rgb.y),
+            Math.floor(rgb.z),
+            this.color.getAlpha()];
           break;
         case "":
           break;
@@ -446,18 +330,23 @@ export default defineComponent({
       this.emitNewColor();
     },
     emitNewColor() {
-      const hsvData : [number, number, number] = [this.hue, this.saturation, this.value];
-      const hslData : [number, number, number, number] = [...this.hsvToHsl(...hsvData), this.alpha];
-      const rgbData : [number, number, number, number] = [...this.hsvToRgb(...hsvData), this.alpha];
+      const rgb = this.color.getRgb();
+      const hsl = this.color.getHsl();
+      const hsv = this.color.getHsv();
+      console.log("Emitting", hsv);
+      const alpha = this.color.getAlpha();
+      const hsvData = [hsv.x, hsv.y, hsv.z, alpha];
+      const hslData = [hsl.x, hsl.y, hsl.z, alpha];
+      const rgbData = [rgb.x, rgb.y, rgb.z, alpha];
+      const rgbString = this.color.getColorStringRgba();
+      const hslString = this.color.getColorStringHsla();
+      const hexString = this.color.getColorStringHex();
       this.$emit("newColorRawRgb", rgbData);
       this.$emit("newColorRawHsl", hslData);
-      this.$emit("newColorRawHsv", [...hsvData, this.alpha]);
-      this.$emit("newColorStringRgb", this.genColorStringRgba(...rgbData));
-      this.$emit("newColorStringHex", this.genColorStringHex(...rgbData));
-      this.$emit("newColorStringHsl", this.genColorStringHsla(...hslData));
-    },
-    clamp(min : number, max: number, value : number) {
-      return Math.min(Math.max(min, value), max);
+      this.$emit("newColorRawHsv", hsvData);
+      this.$emit("newColorStringRgb", rgbString);
+      this.$emit("newColorStringHex", hexString);
+      this.$emit("newColorStringHsl", hslString);
     },
     handlePointerDownClosing(e : PointerEvent) {
       const container = <HTMLElement>this.$refs.container;
@@ -468,6 +357,7 @@ export default defineComponent({
       }
       e.cancelBubble = true;
       e.preventDefault();
+      document.addEventListener("pointerup", this.handlePointerUpClosing);
     },
     handlePointerUpClosing(e : PointerEvent) {
       const container = <HTMLElement>this.$refs.container;
@@ -483,6 +373,10 @@ export default defineComponent({
       });
     },
     handleNewStringValueHSV(newVal : string, idx : number) {
+      const hsv = this.color.getHsv();
+      let hue = hsv.x;
+      let saturation = hsv.y;
+      let value = hsv.z;
       switch(idx) {
         case 0:
           let tempInt = parseInt(newVal);
@@ -490,46 +384,122 @@ export default defineComponent({
             this.stringComponentValues[idx] = '0';
             tempInt = 0;
           } else if (tempInt >= 360) {
-            tempInt = tempInt % 360;
             this.stringComponentValues[idx] = (tempInt % 360).toFixed(0);
+            tempInt = tempInt % 360;
           } else {
             this.stringComponentValues[idx] = tempInt.toFixed(0);
           }
-          this.hue = tempInt;
+          hue = tempInt;
           break;
         case 1:
-        case 2:
-          const tempVal = parseInt(newVal);
-          if (tempVal < 0) {
+          if (newVal.includes("%")) {
+            newVal = newVal.replace("%", "");
+          }
+          let tempSat = parseInt(newVal);
+          if (tempSat < 0) {
+            tempSat = 0;
             this.stringComponentValues[idx] = '0%';
-          } else if (tempVal >= 100) {
+          } else if (tempSat >= 100) {
+            tempSat = 1;
             this.stringComponentValues[idx] = '100%';
           } else {
-            this.stringComponentValues[idx] = tempVal.toFixed(0) + '%';
+            this.stringComponentValues[idx] = tempSat.toFixed(0) + '%';
+            tempSat /= 100;
           }
+          saturation = tempSat;
+          break;
+        case 2:
+          if (newVal.includes("%")) {
+            newVal = newVal.replace("%", "");
+          }
+          let tempValue = parseInt(newVal);
+          if (tempValue < 0) {
+            tempValue = 0;
+            this.stringComponentValues[idx] = '0%';
+          } else if (tempValue >= 100) {
+            tempValue = 1;
+            this.stringComponentValues[idx] = '100%';
+          } else {
+            this.stringComponentValues[idx] = tempValue.toFixed(0) + '%';
+            tempValue /= 100;
+          }
+          value = tempValue;
           break;
         default:
           throw "[ColorPicker::handleNewStringValueHSV] Invalid Index";
       }
+      console.log("setHSV", [hue, saturation, value]);
+      this.color.setHSV([hue, saturation, value]);
     },
     handleNewStringValueRGB(newVal : string, idx : number) {
+      const rgb = this.color.getRgb();
+      let r = rgb.x;
+      let g = rgb.y;
+      let b = rgb.z;
+      let tempInt = parseInt(newVal);
+      if (tempInt < 0) {
+        tempInt = 0;
+        this.stringComponentValues[idx] = '0';
+      } else if (tempInt > 255) {
+        tempInt = 255;
+        this.stringComponentValues[idx] = '255';
+      } else {
+        this.stringComponentValues[idx] = tempInt.toFixed(0);
+      }
+      const newColor : [number, number, number] = [r, g, b];
+      newColor[idx] = tempInt;
+      this.color.setRGB(newColor);
     },
     handleNewStringValueHEX(newVal : string, idx : number) {
+      const hex = this.color.getHex();
+      let r = hex.x;
+      let g = hex.y;
+      let b = hex.z;
+      let tempInt = parseInt(newVal, 16);
+      if (tempInt < 0) {
+        tempInt = 0;
+        this.stringComponentValues[idx] = '00';
+      } else if (tempInt > 255) {
+        tempInt = 255;
+        this.stringComponentValues[idx] = 'FF';
+      } else {
+        this.stringComponentValues[idx] = tempInt.toString(16).toUpperCase();
+      }
+      const newColor : [number, number, number] = [r, g, b];
+      newColor[idx] = tempInt;
+      this.color.setHEX(newColor);
     },
     setNewValue(newVal : string, idx : number) {
-      switch(this.colorSpace) {
-        case "HSV":
-          this.handleNewStringValueHSV(newVal, idx);
-          break;
-        case "RGB":
-          this.handleNewStringValueRGB(newVal, idx);
-          break;
-        case "HEX":
-          this.handleNewStringValueHEX(newVal, idx);
-          break;
-        default:
-          throw "[ColorPicker:setNewValue] Invalid colorSpace";
+      console.log("setnew", newVal, idx);
+      if (idx === 3) {
+        let tempInt = parseFloat(newVal);
+        if (tempInt < 0) {
+          tempInt = 0;
+          this.stringComponentValues[idx] = '0';
+        } else if (tempInt > 1) {
+          tempInt = 1;
+          this.stringComponentValues[idx] = '1';
+        } else {
+          this.stringComponentValues[idx] = tempInt.toFixed(2);
+        }
+        this.color.setAlpha(tempInt);
+      } else {
+        switch(this.colorSpace) {
+          case "HSV":
+            this.handleNewStringValueHSV(newVal, idx);
+            break;
+          case "RGB":
+            this.handleNewStringValueRGB(newVal, idx);
+            break;
+          case "HEX":
+            this.handleNewStringValueHEX(newVal, idx);
+            break;
+          default:
+            throw "[ColorPicker:setNewValue] Invalid colorSpace";
+        }
       }
+      this.emitNewColor();
+      this.setSelector();
     },
   },
   watch: {
@@ -549,6 +519,15 @@ export default defineComponent({
       }
       this.updateComponentValues();
     },
+    defaultValue() {
+      console.log("set Def");
+      let r = this.defaultValue.x;
+      let g = this.defaultValue.y;
+      let b = this.defaultValue.z;
+      let a = this.defaultValue.w;
+      this.color.setRGB([r, g, b, a]);
+      this.setSelector();
+    },
     hue() {
     },
     //saturation() {
@@ -559,6 +538,11 @@ export default defineComponent({
     //},
   },
   mounted() {
+    let r = this.defaultValue.x;
+    let g = this.defaultValue.y;
+    let b = this.defaultValue.z;
+    let a = this.defaultValue.w;
+    this.color.setRGB([r, g, b, a]);
     const container = <HTMLElement>this.$refs.container;
     if (this.showBelow) {
       container.style.bottom = "auto";
@@ -569,7 +553,6 @@ export default defineComponent({
     (<HTMLElement>this.$refs.bar)
       .addEventListener("pointerdown", this.handlePointerDownBar);
     document.addEventListener("pointerdown", this.handlePointerDownClosing);
-    document.addEventListener("pointerup", this.handlePointerUpClosing);
     (<HTMLElement>this.$refs.barSelector).style.top = "0";
     this.setSelector();
     this.getWheelCoordinates();

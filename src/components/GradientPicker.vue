@@ -237,6 +237,7 @@ export default defineComponent({
   width: 40%;
   background: red;
   border-radius: 5px;
+  outline: #696969;
 }
 .gradient-color-picker-position {
   width: 50%;
