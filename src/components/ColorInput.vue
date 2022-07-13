@@ -1,13 +1,19 @@
 <template>
-  <div ref="inputContainer" class="shader-node-number-input">
+  <div ref="inputContainer" class="shader-node-color-input">
     <span>{{input.getName()}}</span>
     <span 
       v-if="!isConnected"
-      ref="inputActive"
-      class="shader-node-number-input-active"
-      :style="{backgroundColor : color}"
-      @pointerup="togglePicker"
+      class="shader-node-color-input-active-container"
       >
+      <span
+        class="shader-node-color-input-bg"
+        ></span>
+      <span
+        class="shader-node-color-input-active"
+        ref="inputActive"
+        :style="{backgroundColor : color}"
+        @pointerup="togglePicker"
+        ></span>
     </span>
     <ColorPicker ref="colorPicker" v-if="state === State.Active" 
       :defaultValue="startValue"
@@ -113,7 +119,7 @@ export default defineComponent({
   
 
 <style lang="scss" scoped>
-.shader-node-number-input {
+.shader-node-color-input {
     pointer-events: all;
     width: 100%;
     border-radius: 5px;
@@ -123,21 +129,33 @@ export default defineComponent({
     justify-content: space-between;
     align-items: center;
 }
-.shader-node-number-input-active {
+.shader-node-color-input-active-container {
+  width: 50px;
   height: 1.35rem;
-    width: 50px;
-    display: inline-block;
-    background: red;
-    border-radius: 5px;
   position: relative;
-  &:before {
-    content: '';
-    width: 100%;
-    height: 100%;
-    background-color:white;
-    z-index: -1;
-    position: absolute;
-  }
+  border-radius: 5px;
+}
+.shader-node-color-input-bg {
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(45deg, #888 25%, transparent 25%),
+    linear-gradient(-45deg, #888 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #888 75%),
+    linear-gradient(-45deg, white 75%, #888 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  position: absolute;
+  border-radius: 5px;
+}
+
+.shader-node-color-input-active {
+  height: 1.35rem;
+  width: 50px;
+  display: inline-block;
+  background: red;
+  position: relative;
+  border-radius: 5px;
 }
 .shader-node-number-color {
   width: 100%
