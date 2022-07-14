@@ -101,19 +101,16 @@ export class Color {
       } else {
         output[i] = val;
       }
-      console.log("converted", input[i], output[i]);
     }
     return [ ...output ];
   }
 
   setHSV(values : [number, number, number] | [number, number, number, number]) {
-    console.log("set hsv, alpha:", this.alpha);
     if (!this.isValidHSVorHSL(values)) {
       throw "[Color:setHSV] Invalid hsv values";
     }
     if (values.length === 4) {
       this.alpha = values[3];
-      console.log("alpha", this.alpha);
     }
     this.hsv.x = values[0];
     this.hsv.y = values[1];
@@ -185,7 +182,6 @@ export class Color {
     if (value < 0 || value > 1) {
       throw "[Color:setAlpha] Value invalid";
     }
-    console.log("new alpha", value);
     this.alpha = value;
   }
 
