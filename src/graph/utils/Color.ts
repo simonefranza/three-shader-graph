@@ -107,8 +107,9 @@ export class Color {
 
   setHSV(values : [number, number, number] | [number, number, number, number]) {
     if (!this.isValidHSVorHSL(values)) {
-      throw "[Color:setHSV] Invalid hsv values";
+      throw "[Color:setHSV] Invalid hsv values: " + values;
     }
+    console.log("set hsv", values.length, values[3], this.alpha);
     if (values.length === 4) {
       this.alpha = values[3];
     }
@@ -126,6 +127,7 @@ export class Color {
     this.hex.x = rgbValues[0];
     this.hex.y = rgbValues[1];
     this.hex.z = rgbValues[2];
+    console.log("new hsv", this.hsv, this.rgb);
   }
 
   setHSL(values : [number, number, number] | [number, number, number, number]) {
@@ -217,40 +219,60 @@ export class Color {
     return this.alpha;
   }
 
-  static rgbToHsv (r : number, g : number, b : number) : [number, number, number] {
-    //https://stackoverflow.com/questions/8022885/rgb-to-hsv-color-in-javascript
-    let rr, gg, bb, h, s;
-    const rabs = r;
-    const gabs = g;
-    const babs = b;
-    const v = Math.max(rabs, gabs, babs);
-    const diff = v - Math.min(rabs, gabs, babs);
-    const diffc = (c : number) => (v - c) / 6 / diff + 1 / 2;
-    if (diff == 0) {
-      h = s = 0;
-    } else {
-      s = diff / v;
-      rr = diffc(rabs);
-      gg = diffc(gabs);
-      bb = diffc(babs);
+  clone(color: Color) {
+    console.log("clone", color);
+    const alpha = color.getAlpha();
+    this.alpha = alpha;
+    console.log("clone", alpha);
+    const hsv = color.getHsv();
+    const hsl = color.getHsl();
+    const rgb = color.getRgb();
+    const hex = color.getHex();
+    this.hsv.x = hsv.x;
+    this.hsv.y = hsv.y;
+    this.hsv.z = hsv.z;
 
-      if (rabs === v) {
-        h = bb - gg;
-      } else if (gabs === v) {
-        h = (1 / 3) + rr - bb;
-      } else if (babs === v) {
-        h = (2 / 3) + gg - rr;
-      } else {
-        console.log({rabs, gabs, babs, v, r, g, b});
-        throw "[rgb2hsv] h is undefined";
-      }
-      if (h < 0) {
-        h += 1;
-      } else if (h > 1) {
-        h -= 1;
-      }
+    this.hsl.x = hsl.x;
+    this.hsl.y = hsl.y;
+    this.hsl.z = hsl.z;
+
+    this.rgb.x = rgb.x;
+    this.rgb.y = rgb.y;
+    this.rgb.z = rgb.z;
+
+    this.hex.x = hex.x;
+    this.hex.y = hex.y;
+    this.hex.z = hex.z;
+  }
+
+  static rgbToHsv (R : number, G : number, B : number) : [number, number, number] {
+    if (R < 0 || R > 255) {
+      throw "[rgbToHsv] R value invalid: " + R;
+    } else if (G < 0 || G > 255) {
+      throw "[rgbToHsv] G value invalid: " + G;
+    } else if (B < 0 || B > 255) {
+      throw "[rgbToHsv] B value invalid: " + B;
     }
-    return [ h * 360, s, v ];
+    const R_ = R / 255;
+    const G_ = G / 255;
+    const B_ = B / 255;
+    const Cmax = Math.max(R_, Math.max(G_, B_));
+    const Cmin = Math.min(R_, Math.min(G_, B_));
+    const delta = Cmax - Cmin;
+    let H = 0;
+    if (delta === 0) {
+      H = 0;
+    } else if (Cmax === R_) {
+      H = 60 * (((G_ - B_) / delta) % 6);
+    } else if (Cmax === G_) {
+      H = 60 * (((B_ - R_) / delta) + 2);
+    } else if (Cmax === B_) {
+      H = 60 * (((R_ - G_) / delta) + 4);
+    }
+    const S = Cmax === 0 ? 0 : delta / Cmax;
+    const V = Cmax;
+
+    return [ H, S, V ];
   }
 
   // h 0 <=360, s,v,a 0<=1
@@ -302,7 +324,7 @@ export class Color {
   }
 
   static hslToRgb(H : number, S : number, L : number) : [number, number, number] {
-    if (H < 0 || H > 1) {
+    if (H < 0 || H >= 360) {
       throw "[hsvToRgb] H value invalid: " + H;
     } else if (S < 0 || S > 1) {
       throw "[hsvToRgb] S value invalid: " + S;

@@ -28,6 +28,7 @@ import { PropType, defineComponent } from 'vue'
 import { InputNumber } from "../graph/nodes/InputNumber";
 import {Emitter} from "mitt";
 import {Events} from "../graph/Manager";
+import {Color, ColorSpace} from "../graph/utils/Color";
 import {Vector4}  from "three";
 
 enum State {
@@ -42,7 +43,7 @@ export default defineComponent({
       state: State.Init,
       State,
       isConnected : false,
-      startValue: new Vector4(1, 1, 1, 1),
+      startValue: new Color(ColorSpace.HSV, 0, 0, 0, 0) as Color,
     };
   },
   props: {
@@ -61,16 +62,6 @@ export default defineComponent({
   computed: {
   },
   methods: {
-    HSLToRGB(h : number, s : number, l : number) {
-      //https://www.30secondsofcode.org/js/s/hsl-to-rgb
-      s /= 100;
-      l /= 100;
-      const k = (n : number) => (n + h / 30) % 12;
-      const a = s * Math.min(l, 1 - l);
-      const f = (n : number) =>
-        l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-      return [f(0), f(8), f(4)];
-    },
     updateColor(newColor : string) {
     console.log("new Color", newColor);
       this.color = newColor;
@@ -79,17 +70,19 @@ export default defineComponent({
       const split2 = split[1].split(")");
       const split3 = split2[0].split(",");
       const h = parseFloat(split3[0]);
-      const s = parseFloat(split3[1]);
-      const l = parseFloat(split3[2]);
+      const s = parseFloat(split3[1]) / 100;
+      const l = parseFloat(split3[2]) / 100;
       let a = 1;
       if (split3.length === 4) {
         console.log("parse", split[3]);
         a = parseFloat(split3[3]) / 100;
       }
-      let rgb = this.HSLToRGB(h, s, l);
-      console.log("value set colorinput",rgb[0], rgb[1], rgb[2],a);
-      this.input.setValue(new Vector4(rgb[0], rgb[1], rgb[2],a));
-      this.startValue = this.input.getValue().value;
+      let rgb = Color.hslToRgb(h, s, l);
+      console.log("value set colorinput",h, s, l, "rgb", rgb[0], rgb[1], rgb[2],a);
+      this.input.setValue(new Vector4(h, s, l, a));
+      const color : Vector4 = this.input.getValue().value;
+      console.log("set", color);
+      this.startValue = new Color(ColorSpace.HSL, color.x, color.y, color.z, color.w);
       this.emitter.emit("recompile");
     },
     togglePicker(e : PointerEvent) {
@@ -110,9 +103,9 @@ export default defineComponent({
   },
   mounted() {
     this.emitter.on("recompile", this.checkIsConnected);
-    this.startValue = this.input.getValue().value;
-    (<HTMLElement>this.$refs.inputActive).style.backgroundColor = 
-`rgba(${255 * this.startValue.x}, ${255 * this.startValue.y},${255 * this.startValue.z},${this.startValue.w})`;
+    const color : Vector4 = this.input.getValue().value;
+    this.startValue = new Color(ColorSpace.HSV, color.x, color.y, color.z, color.w);
+    (<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.startValue.getColorStringRgba();
   },
 })
 </script>
@@ -156,6 +149,7 @@ export default defineComponent({
   background: red;
   position: relative;
   border-radius: 5px;
+  outline: 0.5px solid #696969;
 }
 .shader-node-number-color {
   width: 100%

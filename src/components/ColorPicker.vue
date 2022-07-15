@@ -65,7 +65,7 @@ export default defineComponent({
   },
   props: {
     defaultValue: {
-      type: Object as PropType<Vector4>,
+      type: Object as PropType<Color>,
       required: true,
     },
     showBelow: {
@@ -198,7 +198,7 @@ export default defineComponent({
       const barSelector = (<HTMLElement>this.$refs.barSelector);
       const {top : topValue} = this.scaleOffsetFromPixels(parseFloat(barSelector.style.top));
       const value = clamp(0, 1, 1 - topValue / barBounding.height);
-      console.log("sethsv", [hue, saturation, value]);
+      console.log("sethsv", [hue, saturation, value], this.color.getAlpha());
       this.color.setHSV([hue, saturation, value]);
       this.updateComponentValues();
     },
@@ -245,10 +245,8 @@ export default defineComponent({
       };
     },
     setSelector() {
-      let r = this.defaultValue.x;
-      let g = this.defaultValue.y;
-      let b = this.defaultValue.z;
-      let [h, s, v] = Color.rgbToHsv(r, g, b);
+      const hsv = this.defaultValue.getHsv()
+      const [h, s, v] = [hsv.x, hsv.y, hsv.z];
       //this.hue = h;
       //this.saturation = s;
       //this.value = v;
@@ -315,6 +313,7 @@ export default defineComponent({
         case "HEX":
         case "RGB":
           const rgb = this.color.getRgb();
+          console.log("newRgb", rgb);
           this.componentValues = [
             Math.floor(rgb.x),
             Math.floor(rgb.y),
@@ -333,8 +332,8 @@ export default defineComponent({
       const rgb = this.color.getRgb();
       const hsl = this.color.getHsl();
       const hsv = this.color.getHsv();
-      console.log("Emitting", hsv);
       const alpha = this.color.getAlpha();
+      console.log("Emitting", hsv, alpha);
       const hsvData = [hsv.x, hsv.y, hsv.z, alpha];
       const hslData = [hsl.x, hsl.y, hsl.z, alpha];
       const rgbData = [rgb.x, rgb.y, rgb.z, alpha];
@@ -520,12 +519,8 @@ export default defineComponent({
       this.updateComponentValues();
     },
     defaultValue() {
-      console.log("set Def");
-      let r = this.defaultValue.x;
-      let g = this.defaultValue.y;
-      let b = this.defaultValue.z;
-      let a = this.defaultValue.w;
-      this.color.setRGB([r, g, b, a]);
+      console.log("set Def", this.defaultValue);
+      this.color.clone(this.defaultValue);
       this.setSelector();
     },
     hue() {
@@ -538,10 +533,11 @@ export default defineComponent({
     //},
   },
   mounted() {
-    let r = this.defaultValue.x;
-    let g = this.defaultValue.y;
-    let b = this.defaultValue.z;
-    let a = this.defaultValue.w;
+    console.log("stat", this.defaultValue);
+    const rgb = this.color.getRgb();
+    const [r, g, b] = [rgb.x, rgb.y, rgb.z];
+    const a = this.color.getAlpha();
+    console.log("set rRGB", this.color.getAlpha());
     this.color.setRGB([r, g, b, a]);
     const container = <HTMLElement>this.$refs.container;
     if (this.showBelow) {
@@ -554,6 +550,7 @@ export default defineComponent({
       .addEventListener("pointerdown", this.handlePointerDownBar);
     document.addEventListener("pointerdown", this.handlePointerDownClosing);
     (<HTMLElement>this.$refs.barSelector).style.top = "0";
+    console.log("mounted");
     this.setSelector();
     this.getWheelCoordinates();
     this.colorSpace = "HSV";

@@ -20,7 +20,8 @@ export class PrincipledBSDF extends BaseNode {
         <ShaderVariable>{
           name : "color",
           type : "vec4",
-          value : new Vector4(0.3, 0.8, 1, 1)
+          // color in hsv
+          value : new Vector4(320, 0.75, 1, 1)
         }
         ),
         new BaseInput(
