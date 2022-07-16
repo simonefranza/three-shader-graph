@@ -63,7 +63,7 @@ export default defineComponent({
   },
   methods: {
     updateColor(newColor : string) {
-    console.log("new Color", newColor);
+      console.log("new Color", newColor);
       this.color = newColor;
       //(<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.color;
       const split = newColor.split("(");

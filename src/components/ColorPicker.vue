@@ -533,12 +533,7 @@ export default defineComponent({
     //},
   },
   mounted() {
-    console.log("stat", this.defaultValue);
-    const rgb = this.color.getRgb();
-    const [r, g, b] = [rgb.x, rgb.y, rgb.z];
-    const a = this.color.getAlpha();
-    console.log("set rRGB", this.color.getAlpha());
-    this.color.setRGB([r, g, b, a]);
+    this.color.clone(this.defaultValue);
     const container = <HTMLElement>this.$refs.container;
     if (this.showBelow) {
       container.style.bottom = "auto";
