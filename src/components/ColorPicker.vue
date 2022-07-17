@@ -1,5 +1,10 @@
 <template>
   <div ref="container" class="color-picker-container"> 
+    <button 
+      @click="copyColor"
+      class="color-picker-copy">
+      <img src="icons/copy-icon.svg" alt="copy icon" />
+    </button>
     <div class="color-picker-colors">
       <div ref="wheel" class="color-picker-wheel">
         <div ref="wheelSelector" class="color-picker-wheel-selector"></div>
@@ -500,6 +505,32 @@ export default defineComponent({
       this.emitNewColor();
       this.setSelector();
     },
+    copyColor() {
+      let value = "";
+      switch (this.colorSpace) {
+        case "HSV":
+          value = this.color.getColorStringHsla();
+          break;
+        case "HEX":
+          value = this.color.getColorStringHex();
+          break;
+        case "RGB":
+          value = this.color.getColorStringRgba();
+          break;
+        case "":
+          break;
+        default:
+        throw "[copyColor] Unknown color space";
+      }
+      const inputEl = document.createElement("input");
+      inputEl.value = value;
+      document.body.appendChild(inputEl);
+      inputEl.select();
+
+      document.execCommand("copy");
+      document.body.removeChild(inputEl);
+      console.log("Copied", value);
+    },
   },
   watch: {
     colorSpace() {
@@ -705,6 +736,29 @@ export default defineComponent({
   }
   &-el p {
     margin-block: 0.5rem;
+  }
+}
+.color-picker-copy {
+  position: absolute;
+  z-index: 100;
+  background: #151515;
+  padding: 0.6rem;
+  border-radius: 30px;
+  outline: 0.5px solid #696969;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.3rem;
+  border: none;
+  box-sizing: initial;
+  cursor: pointer;
+  & img {
+    filter: invert(1);
+    fill: white;
+    height: 80%;
+    position: relative;
   }
 }
 </style>

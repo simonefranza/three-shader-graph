@@ -271,6 +271,9 @@ export class Color {
     }
     const S = Cmax === 0 ? 0 : delta / Cmax;
     const V = Cmax;
+    if (H < 0 || H >= 360) {
+      H = (H + 3600) % 360;
+    }
 
     return [ H, S, V ];
   }
