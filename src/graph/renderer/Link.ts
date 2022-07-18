@@ -234,7 +234,7 @@ export class Link {
   deleteElement() {
     console.log("delete");
     this.path.remove();
-    if (this.state === State.Initial) {
+    if (this.state === State.Initial || this.state === State.Detached) {
       removeEventListener("pointermove", this.pointerMoveHandler);
       removeEventListener("pointerup", this.pointerUpHandler);
       this.emitter.off("fixLink", this.fixLinkHandler);
