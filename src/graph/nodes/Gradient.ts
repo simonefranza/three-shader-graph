@@ -1,4 +1,4 @@
-import {Vector4} from "three";
+import { Color } from "../utils/Color";
 
 export class Gradient {
   pickers: Picker[];
@@ -43,26 +43,21 @@ export class Gradient {
     return [ this.pickers[idx], this.pickers[idx + 1] ];
   }
 
-  handleInterpolationConstant(pickerBefore : Picker) : Vector4 {
+  handleInterpolationConstant(pickerBefore : Picker) : Color {
     return pickerBefore.color;
   }
 
-  handleInterpolationLinear(pos : number, pickerBefore : Picker, pickerAfter : Picker) {
-    console.log(pickerBefore, pickerAfter);
-    const res = new Vector4(1, 1, 1, 1);
+  handleInterpolationLinear(pos : number, pickerBefore : Picker, pickerAfter : Picker) : Color{
     const dist = pickerAfter.position - pickerBefore.position;
     if (Math.abs(dist) < 1e-5) {
       return pickerBefore.color;
     }
     const fac = (pos - pickerBefore.position) / dist;
-    res.x = (1 - fac) * pickerBefore.color.x + fac * pickerAfter.color.x;
-    res.y = (1 - fac) * pickerBefore.color.y + fac * pickerAfter.color.y;
-    res.z = (1 - fac) * pickerBefore.color.z + fac * pickerAfter.color.z;
-    res.w = (1 - fac) * pickerBefore.color.w + fac * pickerAfter.color.w;
-    return res;
+
+    return Color.interpolateRgba(pickerBefore.color, pickerAfter.color, fac);
   }
 
-  getColorAt(pos : number) : Vector4 {
+  getColorAt(pos : number) : Color {
     if (pos < 0 || pos > 1) {
       throw "[Gradient] Position is outside of bound: " + pos;
     }
@@ -83,5 +78,5 @@ export enum Interpolation {
 
 export interface Picker {
   position: number,
-  color : Vector4,
+  color : Color,
 }

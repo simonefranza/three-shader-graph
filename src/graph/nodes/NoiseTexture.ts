@@ -21,7 +21,8 @@ export class NoiseTexture extends BaseNode {
         new InputNumber(
           "scale",
           "number",
-          2),
+          2
+        ),
         // from 0 to 15, AKA octaves
         new InputNumber(
           "detail",

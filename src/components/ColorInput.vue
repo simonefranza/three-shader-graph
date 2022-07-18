@@ -26,6 +26,7 @@
 import ColorPicker from "./ColorPicker.vue";
 import { PropType, defineComponent } from 'vue'
 import { InputNumber } from "../graph/nodes/InputNumber";
+import { ColorVariable } from "../graph/shaders/CommonShader";
 import {Emitter} from "mitt";
 import {Events} from "../graph/Manager";
 import {Color, ColorSpace} from "../graph/utils/Color";
@@ -75,8 +76,8 @@ export default defineComponent({
       if (split3.length === 4) {
         a = parseFloat(split3[3]) / 100;
       }
-      let rgb = Color.hslToRgb(h, s, l);
-      this.input.setValue(new Vector4(h, s, l, a));
+      const inputColor : ColorVariable = this.input.getValue();
+      inputColor.value.setHSL([h, s, l, a]);
       const color : Vector4 = this.input.getValue().value;
       this.startValue = new Color(ColorSpace.HSL, color.x, color.y, color.z, color.w);
       this.emitter.emit("recompile");
@@ -99,8 +100,7 @@ export default defineComponent({
   },
   mounted() {
     this.emitter.on("recompile", this.checkIsConnected);
-    const color : Vector4 = this.input.getValue().value;
-    this.startValue = new Color(ColorSpace.HSV, color.x, color.y, color.z, color.w);
+    this.startValue.clone(this.input.getValue().value);
     (<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.startValue.getColorStringRgba();
   },
 })

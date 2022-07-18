@@ -3,8 +3,8 @@ import { BaseOutput } from "./BaseOutput";
 import { BaseInput, InputVariablesMap } from "./BaseInput";
 import { VertexShader } from "../shaders/VertexShader";
 import { FragmentShader } from "../shaders/FragmentShader";
-import { ShaderVariable } from "../shaders/CommonShader";
-import { Vector4 } from "three";
+import { ColorVariable } from "../shaders/CommonShader";
+import { Color, ColorSpace } from "../utils/Color";
 
 export class PrincipledBSDF extends BaseNode {
   inputVariables : InputVariablesMap;
@@ -17,21 +17,21 @@ export class PrincipledBSDF extends BaseNode {
           "base-color",
           "color",
           "color",
-        <ShaderVariable>{
+        <ColorVariable>{
           name : "color",
           type : "vec4",
           // color in hsv
-          value : new Vector4(320, 0.75, 1, 1)
+          value : new Color(ColorSpace.HSV, 320, 0.75, 1, 1)
         }
         ),
         new BaseInput(
           "emission-color",
           "color",
           "color",
-        <ShaderVariable>{
+        <ColorVariable>{
           name : "color",
           type : "vec4",
-          value : new Vector4(0, 0, 0, 1)
+          value : new Color(ColorSpace.HSV, 0, 0, 0, 1)
         }
         ),
       ]},
@@ -39,6 +39,7 @@ export class PrincipledBSDF extends BaseNode {
     );
     this.inputVariables = {};
     const list : BaseInput[] = super.getInputs().inputList;
+    console.log("list", list);
     list.forEach((input : BaseInput) => {
       this.inputVariables[input.getName()] = input;
     });
@@ -52,12 +53,14 @@ export class PrincipledBSDF extends BaseNode {
       const prevParent : BaseNode = connection.getParent();
       [ baseColorVarName, ] = prevParent.compile(vert, frag);
     } else {
-      const baseColorValue : ShaderVariable =
+      const baseColorValue : ColorVariable =
         this.inputVariables["base-color"].getValue();
       baseColorVarName = vert.generateVariableID("princ_base_color_");
+      console.log(baseColorValue, baseColorValue.value);
+      const rgb = baseColorValue.value.getUnitRgb();
+      const alpha = baseColorValue.value.getAlpha();
       const line : string = `vec4 ${baseColorVarName} = ${baseColorValue.type}` +
-        `(${baseColorValue.value.x}, ${baseColorValue.value.y}, ` +
-        `${baseColorValue.value.z}, ${baseColorValue.value.w});`;
+        `(${rgb.x}, ${rgb.y}, ${rgb.z}, ${alpha});`;
       frag.addToMain(line);
     }
     if (this.inputVariables["emission-color"].isConnected()) {
@@ -65,12 +68,13 @@ export class PrincipledBSDF extends BaseNode {
       const prevParent : BaseNode = connection.getParent();
       [ emissionColorVarName, ] = prevParent.compile(vert, frag);
     } else {
-      const emissionColorValue : ShaderVariable =
+      const emissionColorValue : ColorVariable =
         this.inputVariables["emission-color"].getValue();
+      const rgb = emissionColorValue.value.getUnitRgb();
+      const alpha = emissionColorValue.value.getAlpha();
       emissionColorVarName = vert.generateVariableID("princ_emission_color_");
       const line : string = `vec4 ${emissionColorVarName} = ${emissionColorValue.type}` +
-        `(${emissionColorValue.value.x}, ${emissionColorValue.value.y}, ` +
-        `${emissionColorValue.value.z}, ${emissionColorValue.value.w});`;
+        `(${rgb.x}, ${rgb.y}, ${rgb.z}, ${alpha});`;
       frag.addToMain(line);
     }
     const princOutputID = vert.generateVariableID("princ_bsdf_");

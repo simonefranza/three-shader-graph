@@ -197,6 +197,10 @@ export class Color {
     return Color.getColorStringHsla(this.hsl.x, this.hsl.y, this.hsl.z, this.alpha);
   }
 
+  getUnitRgb() : Vector3 {
+    return new Vector3(this.rgb.x / 255, this.rgb.y / 255, this.rgb.z / 255);
+  }
+
   getRgb() : Vector3 {
     return this.rgb;
   }
@@ -390,5 +394,19 @@ export class Color {
     }
     return `hsla(${h.toFixed(2)}deg, ` +
       `${(s * 100).toFixed(2)}%, ${(l * 100).toFixed(2)}%, ${(a * 100).toFixed(2)}%)`;
+  }
+
+  static interpolateRgba(a : Color, b : Color, fac : number) : Color {
+    const aRGB = a.getRgb();
+    const bRGB = b.getRgb();
+    const aAlpha = a.getAlpha();
+    const bAlpha = b.getAlpha();
+    const newColor = new Color(ColorSpace.RGB, 0, 0, 0, 1);
+    const R = (1 - fac) * aRGB.x + fac * bRGB.x;
+    const G = (1 - fac) * aRGB.y + fac * bRGB.y;
+    const B = (1 - fac) * aRGB.z + fac * bRGB.z;
+    const alpha = (1 - fac) * aAlpha + fac * bAlpha;
+    newColor.setRGB([ R, G, B, alpha ]);
+    return newColor;
   }
 }

@@ -49,7 +49,6 @@ import { Gradient, Picker } from "../graph/nodes/Gradient";
 import GradientPick from "./GradientPick.vue";
 import ColorPicker from "./ColorPicker.vue";
 import InputField from "./InputField.vue";
-import {Vector4} from "three";
 
 export default defineComponent({
   components: {
@@ -78,22 +77,13 @@ export default defineComponent({
     },
   },
   methods: {
-    convertVector4ToRgb(color : Vector4) {
-      return `rgba(${color.x * 255}, ` +
-      `${color.y * 255}, ` +
-      `${color.z * 255}, ` +
-      `${color.w})`;
-    },
     genColors() {
       this.pickers.forEach((picker, idx) => {
-        this.colors[idx] = this.convertVector4ToRgb(picker.color);
+        this.colors[idx] = picker.color.getColorStringRgba();
       });
     },
     updateColor(color : [number, number, number, number]) {
-      this.pickers[this.selectedPicker].color.x = color[0] / 255;
-      this.pickers[this.selectedPicker].color.y = color[1] / 255;
-      this.pickers[this.selectedPicker].color.z = color[2] / 255;
-      this.pickers[this.selectedPicker].color.w = color[3];
+      this.pickers[this.selectedPicker].color.setRGB(color);
       this.updateGradient();
       this.genColors();
       this.updateGraphNode();
@@ -102,7 +92,8 @@ export default defineComponent({
       const gradientBar = <HTMLElement>this.$refs.gradientBar;
       let newGradient = 'linear-gradient(to right, ';
       this.pickers.forEach((picker, idx) => {
-        newGradient += `${this.convertVector4ToRgb(picker.color)} ${Math.round(picker.position * 100)}%`
+        console.log(picker, picker.color);
+        newGradient += `${picker.color.getColorStringRgba()} ${Math.round(picker.position * 100)}%`
         if (idx !== this.pickers.length - 1) {
           newGradient += ", ";
         } else {
@@ -151,6 +142,7 @@ export default defineComponent({
   },
   watch: {
     pickers() {
+      console.log("Pickers changed");
       this.updateGradient();
       this.genColors();
       this.updateGraphNode();
@@ -183,6 +175,7 @@ export default defineComponent({
   mounted() {
     this.gradient = this.baseNode.getGradient();
     this.pickers = this.gradient.getPickers();
+    console.log(this.pickers[0]);
     this.selectedPicker = 0;
   }
 });

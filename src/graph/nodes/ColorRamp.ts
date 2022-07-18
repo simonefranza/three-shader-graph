@@ -5,8 +5,8 @@ import { InputNumber } from "./InputNumber";
 import { VertexShader } from "../shaders/VertexShader";
 import { FragmentShader } from "../shaders/FragmentShader";
 import { ShaderVariable } from "../shaders/CommonShader";
-import { Vector4 } from "three";
 import { Gradient, Picker, Interpolation } from "./Gradient";
+import { Color, ColorSpace } from "../utils/Color";
 
 export class ColorRamp extends BaseNode {
   inputVariables : InputVariablesMap;
@@ -27,9 +27,8 @@ export class ColorRamp extends BaseNode {
       ]},
       new BaseOutput("color", "color"),
     );
-    this.gradient = new Gradient([ {position : 0, color : new Vector4(1, 0, 0, 1)},
-      {position : 0.6, color : new Vector4(0.5, 0.7, 0, 1)},
-      {position : 1, color : new Vector4(0, 0, 1, 1)} ], Interpolation.Linear);
+    this.gradient = new Gradient([ {position : 0, color : new Color(ColorSpace.RGB, 0, 0, 0, 1)},
+      {position : 1, color : new Color(ColorSpace.RGB, 255, 255, 255, 1)} ], Interpolation.Linear);
     this.inputVariables = {};
     const list : BaseInput[] = super.getInputs().inputList;
     list.forEach((input : BaseInput) => {
@@ -71,11 +70,13 @@ export class ColorRamp extends BaseNode {
       let colorLine = `vec4[${numPickerVarName}] ${pickerVarName};\n`;
       let posLine = `float[${numPickerVarName}] ${pickerPosVarName};\n`;
       pickers.forEach((picker, idx) => {
+        const unitRgb = picker.color.getUnitRgb();
+        const alpha = picker.color.getAlpha();
         colorLine += `${pickerVarName}[${idx}] = ` +
-            `vec4(${super.formatValue(picker.color.x)}, ` +
-                 `${super.formatValue(picker.color.y)}, ` +
-                 `${super.formatValue(picker.color.z)}, ` +
-                 `${super.formatValue(picker.color.w)});\n`;
+            `vec4(${super.formatValue(unitRgb.x)}, ` +
+                 `${super.formatValue(unitRgb.y)}, ` +
+                 `${super.formatValue(unitRgb.z)}, ` +
+                 `${super.formatValue(alpha)});\n`;
         posLine += `${pickerPosVarName}[${idx}] = ${super.formatValue(picker.position)};\n`;
       });
       frag.addToMain(colorLine);
@@ -99,12 +100,14 @@ export class ColorRamp extends BaseNode {
       const finalColorVarName = vert.generateVariableID("col_ramp_color_");
       console.log(facValue.value, "val");
       const color = this.gradient.getColorAt(facValue.value);
+      const unitRgb = color.getUnitRgb();
+      const alpha = color.getAlpha();
       const line  =
         `const vec4 ${finalColorVarName} = ` +
-          `vec4(${super.formatValue(color.x)}, ` +
-          `${super.formatValue(color.y)}, ` +
-          `${super.formatValue(color.z)}, ` +
-          `${super.formatValue(color.w)});`;
+          `vec4(${super.formatValue(unitRgb.x)}, ` +
+          `${super.formatValue(unitRgb.y)}, ` +
+          `${super.formatValue(unitRgb.z)}, ` +
+          `${super.formatValue(alpha)});`;
       frag.addToMain(line);
       return [ finalColorVarName, "" ];
     }

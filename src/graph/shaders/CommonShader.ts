@@ -1,11 +1,12 @@
-import { Vector3 } from "three";
+import { Vector4 } from "three";
+import { Color } from "../utils/Color";
 
 export interface FunctionsMap {
   [key:string] : string
 }
 
 export abstract class CommonShader {
-  #defines : ShaderVariable[]; 
+  #defines : ShaderVariable[];
 
   #varyings: ShaderVariable[];
 
@@ -119,7 +120,7 @@ export abstract class CommonShader {
 
   compileFunctions() : string {
     let str = "";
-    for ( let funcName in this.#functions) {
+    for ( const funcName in this.#functions) {
       str += this.#functions[funcName] + "\n";
     }
     return str;
@@ -150,7 +151,7 @@ export abstract class CommonShader {
   }
 
   addAllToFunctions(functionsObj : FunctionsMap) {
-    for (let functionName in functionsObj) {
+    for (const functionName in functionsObj) {
       this.addToFunctions(functionName, functionsObj[functionName]);
     }
   }
@@ -168,4 +169,11 @@ export interface ShaderVariable {
   name: string;
   type: string;
   value: any;
+}
+
+export interface Vector4Variable extends ShaderVariable {
+  value: Vector4;
+}
+export interface ColorVariable extends ShaderVariable {
+  value: Color;
 }

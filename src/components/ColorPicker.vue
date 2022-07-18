@@ -73,7 +73,6 @@
 </template>
 
 <script lang="ts">
-import {Vector4}  from "three";
 import { PropType, defineComponent } from 'vue'
 import InputField from "./InputField.vue";
 import { ColorSpace, Color } from "../graph/utils/Color";
