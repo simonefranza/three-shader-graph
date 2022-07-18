@@ -21,25 +21,21 @@ export default defineComponent({
   },
   methods: {
     handleFocus(e : FocusEvent) {
-      console.log("focus", e);
       document.addEventListener("keydown", this.handleKeyDown);
     },
     handleBlur(e : FocusEvent) {
-      console.log("blur", e);
       document.removeEventListener("keydown", this.handleKeyDown);
+      this.$emit("newValue", this.tempValue);
     },
     handleKeyDown(e : KeyboardEvent) {
       if (e.key === "Enter") {
-        console.log("enter");
         const inputEl = <HTMLElement>this.$refs.inputElement;
         inputEl.blur();
-        this.$emit("newValue", this.tempValue);
       }
     },
   },
   watch: {
     value() {
-      console.log("value", this.value);
       this.tempValue = this.value.toString();
     },
   },

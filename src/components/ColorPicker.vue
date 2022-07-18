@@ -1,16 +1,25 @@
 <template>
   <div ref="container" class="color-picker-container"> 
-    <button 
-      @click="copyColor"
-      class="color-picker-copy">
-      <img src="icons/copy-icon.svg" alt="copy icon" />
-    </button>
     <div class="color-picker-colors">
-      <div ref="wheel" class="color-picker-wheel">
+      <div ref="wheel" 
+        @pointerdown="handlePointerDownWheel"
+        class="color-picker-wheel">
         <div ref="wheelSelector" class="color-picker-wheel-selector"></div>
       </div>
-      <div ref="bar" class="color-picker-bar">
+      <div ref="bar" 
+        @pointerdown="handlePointerDownBar"
+        class="color-picker-bar">
         <div ref="barSelector" class="color-picker-bar-selector"></div>
+      </div>
+      <div class="color-picker-alpha-bar">
+        <div class="color-picker-alpha-bar-bg">
+        </div>
+        <div ref="alphaBar" 
+          @pointerdown="handlePointerDownAlphaBar"
+          :style="{backgroundImage: `linear-gradient(to bottom, ${colorString}, transparent)`}"
+          class="color-picker-alpha-bar-grad">
+          <div ref="alphaBarSelector" class="color-picker-alpha-bar-selector"></div>
+        </div>
       </div>
     </div>
     <div class="color-picker-space-container">
@@ -47,6 +56,19 @@
         </div>
       </div>
     </div>
+    <div class="color-picker-additional">
+      <button 
+        ref="copyIcon"
+        @click="copyColor"
+        class="color-picker-icons">
+        <img src="icons/copy-icon.svg" alt="copy icon" />
+      </button>
+      <!--<button 
+        @click="pickColor"
+        class="color-picker-icons">
+        <img src="icons/picker-icon.svg" alt="picker icon" />
+      </button>-->
+    </div>
   </div>
 </template>
 
@@ -55,7 +77,7 @@ import {Vector4}  from "three";
 import { PropType, defineComponent } from 'vue'
 import InputField from "./InputField.vue";
 import { ColorSpace, Color } from "../graph/utils/Color";
-import { clamp } from "../graph/utils/General";
+import { clamp, getHexFromInt } from "../graph/utils/General";
 
 export default defineComponent({
   data() {
@@ -63,6 +85,7 @@ export default defineComponent({
       color : new Color(ColorSpace.HSV, 0, 0, 0, 0) as Color,
       canvas : document.getElementById("renderer-canvas"),
       colorSpace : "",
+      colorString : "#110000",
       componentNames : ["H", "S", "V", "A"],
       componentValues : [0, 0, 0, 100],
       stringComponentValues : ["0", "0", "0", "100"],
@@ -108,6 +131,17 @@ export default defineComponent({
       document.addEventListener("pointermove", this.handlePointerMoveBar);
       document.addEventListener("pointerup", this.handlePointerUpBar);
     },
+    handlePointerDownAlphaBar(e : PointerEvent) {
+      const bar = <HTMLElement>this.$refs.alphaBar;
+      const bounding = bar.getBoundingClientRect();
+      const {top} = this.scaleOffsetToPixels(
+        e.clientY - bounding.top,
+      );
+      (<HTMLElement>this.$refs.alphaBarSelector)
+        .style.top = `${top}px`;
+      document.addEventListener("pointermove", this.handlePointerMoveAlphaBar);
+      document.addEventListener("pointerup", this.handlePointerUpAlphaBar);
+    },
     moveWheelSelector(e : PointerEvent) {
       const wheel = <HTMLElement>this.$refs.wheel;
       const bounding = wheel.getBoundingClientRect();
@@ -140,29 +174,31 @@ export default defineComponent({
     handlePointerMoveWheel(e : PointerEvent) {
       this.moveWheelSelector(e);
     },
-    moveBarSelector(e : PointerEvent) {
-      const bar = <HTMLElement>this.$refs.bar;
+    moveBarSelector(e : PointerEvent, bar : HTMLElement, selector : HTMLElement) {
       // TODO Fix issue when moving bar and pointer up is on node color (closes picker)
       const bounding = bar.getBoundingClientRect();
       if (e.clientY > bounding.top + bounding.height) {
         const {top} = this.scaleOffsetToPixels(
           bounding.height,
         );
-        (<HTMLElement>this.$refs.barSelector).style.top = `${top}px`;
+        selector.style.top = `${top}px`;
       } else if  (e.clientY < bounding.top) {
-        (<HTMLElement>this.$refs.barSelector).style.top = `0`;
+        selector.style.top = `0`;
       } else {
         const {top} = this.scaleOffsetToPixels(
           e.clientY - bounding.top,
         );
-        (<HTMLElement>this.$refs.barSelector).style.top = `${top}px`;
+        selector.style.top = `${top}px`;
       }
       this.getWheelCoordinates();
+    },
+    handlePointerMoveBar(e : PointerEvent) {
+      this.moveBarSelector(e, <HTMLElement>this.$refs.bar, <HTMLElement>this.$refs.barSelector);
       (<HTMLElement>this.$refs.wheel).style.filter = 
         `brightness(${this.color.getHsv().z})`;
     },
-    handlePointerMoveBar(e : PointerEvent) {
-      this.moveBarSelector(e);
+    handlePointerMoveAlphaBar(e : PointerEvent) {
+      this.moveBarSelector(e, <HTMLElement>this.$refs.alphaBar, <HTMLElement>this.$refs.alphaBarSelector);
     },
     getWheelCoordinates() {
       const wheel = <HTMLElement>this.$refs.wheel;
@@ -203,8 +239,12 @@ export default defineComponent({
       const barSelector = (<HTMLElement>this.$refs.barSelector);
       const {top : topValue} = this.scaleOffsetFromPixels(parseFloat(barSelector.style.top));
       const value = clamp(0, 1, 1 - topValue / barBounding.height);
-      console.log("sethsv", [hue, saturation, value], this.color.getAlpha());
-      this.color.setHSV([hue, saturation, value]);
+      const alphaBar = (<HTMLElement>this.$refs.alphaBar);
+      const alphaBarBounding = alphaBar.getBoundingClientRect();
+      const alphaBarSelector = (<HTMLElement>this.$refs.alphaBarSelector);
+      const {top : alphaTopValue} = this.scaleOffsetFromPixels(parseFloat(alphaBarSelector.style.top));
+      const alpha = clamp(0, 1, 1 - alphaTopValue / alphaBarBounding.height);
+      this.color.setHSV([hue, saturation, value, alpha]);
       this.updateComponentValues();
     },
     handlePointerUpWheel(e : PointerEvent) {
@@ -213,9 +253,16 @@ export default defineComponent({
       document.removeEventListener("pointerup", this.handlePointerUpWheel);
     },
     handlePointerUpBar(e : PointerEvent) {
-      this.moveBarSelector(e);
+      this.moveBarSelector(e, <HTMLElement>this.$refs.bar, <HTMLElement>this.$refs.barSelector);
+      (<HTMLElement>this.$refs.wheel).style.filter = 
+        `brightness(${this.color.getHsv().z})`;
       document.removeEventListener("pointermove", this.handlePointerMoveBar);
       document.removeEventListener("pointerup", this.handlePointerUpBar);
+    },
+    handlePointerUpAlphaBar(e : PointerEvent) {
+      this.moveBarSelector(e, <HTMLElement>this.$refs.alphaBar, <HTMLElement>this.$refs.alphaBarSelector);
+      document.removeEventListener("pointermove", this.handlePointerMoveAlphaBar);
+      document.removeEventListener("pointerup", this.handlePointerUpAlphaBar);
     },
     scaleOffsetToPixels(top : number, left ?: number) : {left : number, top : number} {
       if (this.canvas === null) {
@@ -295,7 +342,7 @@ export default defineComponent({
           break;
         case "HEX":
           for (let i = 0; i < 3; i ++) {
-            this.stringComponentValues[i] = this.componentValues[i].toString(16).toUpperCase();
+            this.stringComponentValues[i] = getHexFromInt(Math.round(this.componentValues[i]));
           }
           this.stringComponentValues[3] = this.componentValues[3].toString();
           break;
@@ -304,6 +351,7 @@ export default defineComponent({
         default:
           throw "[colorSpace] Unknown color space";
       }
+      this.stringComponentValues[3] = this.componentValues[3].toFixed(2);
     },
     updateComponentValues() {
       switch (this.colorSpace) {
@@ -318,7 +366,6 @@ export default defineComponent({
         case "HEX":
         case "RGB":
           const rgb = this.color.getRgb();
-          console.log("newRgb", rgb);
           this.componentValues = [
             Math.floor(rgb.x),
             Math.floor(rgb.y),
@@ -338,13 +385,13 @@ export default defineComponent({
       const hsl = this.color.getHsl();
       const hsv = this.color.getHsv();
       const alpha = this.color.getAlpha();
-      console.log("Emitting", hsv, alpha);
       const hsvData = [hsv.x, hsv.y, hsv.z, alpha];
       const hslData = [hsl.x, hsl.y, hsl.z, alpha];
       const rgbData = [rgb.x, rgb.y, rgb.z, alpha];
       const rgbString = this.color.getColorStringRgba();
       const hslString = this.color.getColorStringHsla();
       const hexString = this.color.getColorStringHex();
+      this.colorString = hexString.slice(0, 7);
       this.$emit("newColorRawRgb", rgbData);
       this.$emit("newColorRawHsl", hslData);
       this.$emit("newColorRawHsv", hsvData);
@@ -432,7 +479,6 @@ export default defineComponent({
         default:
           throw "[ColorPicker::handleNewStringValueHSV] Invalid Index";
       }
-      console.log("setHSV", [hue, saturation, value]);
       this.color.setHSV([hue, saturation, value]);
     },
     handleNewStringValueRGB(newVal : string, idx : number) {
@@ -474,7 +520,6 @@ export default defineComponent({
       this.color.setHEX(newColor);
     },
     setNewValue(newVal : string, idx : number) {
-      console.log("setnew", newVal, idx);
       if (idx === 3) {
         let tempInt = parseFloat(newVal);
         if (tempInt < 0) {
@@ -530,6 +575,12 @@ export default defineComponent({
       document.execCommand("copy");
       document.body.removeChild(inputEl);
       console.log("Copied", value);
+      let btn = <HTMLElement>this.$refs.copyIcon;
+      let img = btn.querySelector("img");
+      img?.setAttribute("src", "icons/tick-icon.svg");
+      setTimeout(() => {
+        img?.setAttribute("src", "icons/copy-icon.svg");
+      }, 1500);
     },
   },
   watch: {
@@ -550,7 +601,6 @@ export default defineComponent({
       this.updateComponentValues();
     },
     defaultValue() {
-      console.log("set Def", this.defaultValue);
       this.color.clone(this.defaultValue);
       this.setSelector();
     },
@@ -570,22 +620,14 @@ export default defineComponent({
       container.style.bottom = "auto";
       container.style.top = "100%";
     }
-    (<HTMLElement>this.$refs.wheel)
-      .addEventListener("pointerdown", this.handlePointerDownWheel);
-    (<HTMLElement>this.$refs.bar)
-      .addEventListener("pointerdown", this.handlePointerDownBar);
     document.addEventListener("pointerdown", this.handlePointerDownClosing);
     (<HTMLElement>this.$refs.barSelector).style.top = "0";
-    console.log("mounted");
+    (<HTMLElement>this.$refs.alphaBarSelector).style.top = "0";
     this.setSelector();
     this.getWheelCoordinates();
     this.colorSpace = "HSV";
   },
   beforeUnmount() {
-    (<HTMLElement>this.$refs.wheel)
-      .removeEventListener("pointerdown", this.handlePointerDownWheel);
-    (<HTMLElement>this.$refs.bar)
-      .removeEventListener("pointerdown", this.handlePointerDownBar);
     document.removeEventListener("pointerdown", this.handlePointerDownClosing);
     document.removeEventListener("pointerup", this.handlePointerUpClosing);
   },
@@ -644,15 +686,14 @@ export default defineComponent({
     border: 1px solid black;
     transform: translate(-50%, -50%);
     border-radius: 3px;
-      background-color: white;
-      position: absolute;
-
+    background-color: white;
+    position: absolute;
   }
 }
+.color-picker-alpha-bar,
 .color-picker-bar {
   height: 100%;
   width: 11px;
-  background-image: linear-gradient(to bottom, white, black);
   display: inline-block;
   border-radius: 4px;
   position: relative;
@@ -667,6 +708,27 @@ export default defineComponent({
     background-color: white;
     position: absolute;
   }
+}
+.color-picker-alpha-bar-bg,
+.color-picker-alpha-bar-grad {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+}
+.color-picker-alpha-bar-bg {
+  background-image: linear-gradient(45deg, #888 25%, transparent 25%),
+    linear-gradient(-45deg, #888 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #888 75%),
+    linear-gradient(-45deg, white 75%, #888 75%);
+  background-size: 11px 11px;
+  background-position: 0 0, 0 5.5px, 5.5px -5.5px, -5.5px 0px;
+}
+.color-picker-alpha-bar-grad {
+  background-image: linear-gradient(to bottom, red, transparent);
+}
+.color-picker-bar {
+  background-image: linear-gradient(to bottom, white, black);
 }
 
 .color-picker-space-container,
@@ -735,11 +797,21 @@ export default defineComponent({
     align-items: center;
   }
   &-el p {
-    margin-block: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
   }
 }
-.color-picker-copy {
-  position: absolute;
+.color-picker-additional{
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  border-radius: 0.5rem;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
+}
+.color-picker-icons {
   z-index: 100;
   background: #151515;
   padding: 0.6rem;
@@ -750,13 +822,16 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0.3rem;
   border: none;
   box-sizing: initial;
   cursor: pointer;
+  &:hover {
+    background: #252525;
+  }
+  &:active {
+    background: #050505;
+  }
   & img {
-    filter: invert(1);
-    fill: white;
     height: 80%;
     position: relative;
   }

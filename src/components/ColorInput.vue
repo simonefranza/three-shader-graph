@@ -63,7 +63,6 @@ export default defineComponent({
   },
   methods: {
     updateColor(newColor : string) {
-      console.log("new Color", newColor);
       this.color = newColor;
       //(<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.color;
       const split = newColor.split("(");
@@ -74,14 +73,11 @@ export default defineComponent({
       const l = parseFloat(split3[2]) / 100;
       let a = 1;
       if (split3.length === 4) {
-        console.log("parse", split[3]);
         a = parseFloat(split3[3]) / 100;
       }
       let rgb = Color.hslToRgb(h, s, l);
-      console.log("value set colorinput",h, s, l, "rgb", rgb[0], rgb[1], rgb[2],a);
       this.input.setValue(new Vector4(h, s, l, a));
       const color : Vector4 = this.input.getValue().value;
-      console.log("set", color);
       this.startValue = new Color(ColorSpace.HSL, color.x, color.y, color.z, color.w);
       this.emitter.emit("recompile");
     },

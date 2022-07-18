@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { clamp } from "./General";
+import { clamp, getHexFromInt } from "./General";
 
 export enum ColorSpace {
   HSV,
@@ -109,7 +109,6 @@ export class Color {
     if (!this.isValidHSVorHSL(values)) {
       throw "[Color:setHSV] Invalid hsv values: " + values;
     }
-    console.log("set hsv", values.length, values[3], this.alpha);
     if (values.length === 4) {
       this.alpha = values[3];
     }
@@ -127,7 +126,6 @@ export class Color {
     this.hex.x = rgbValues[0];
     this.hex.y = rgbValues[1];
     this.hex.z = rgbValues[2];
-    console.log("new hsv", this.hsv, this.rgb);
   }
 
   setHSL(values : [number, number, number] | [number, number, number, number]) {
@@ -220,10 +218,8 @@ export class Color {
   }
 
   clone(color: Color) {
-    console.log("clone", color);
     const alpha = color.getAlpha();
     this.alpha = alpha;
-    console.log("clone", alpha);
     const hsv = color.getHsv();
     const hsl = color.getHsl();
     const rgb = color.getRgb();
@@ -364,9 +360,9 @@ export class Color {
     } else if (a < 0 || a > 1) {
       throw "[genColorStringHex] a is invalid: " + a;
     }
-    return `#${Math.round(r).toString(16)}` +
-      `${Math.round(g).toString(16)}${Math.round(b).toString(16)}` +
-      `${Math.round(a * 255).toString(16)}`;
+    return `#${getHexFromInt(Math.round(r))}` +
+      `${getHexFromInt(Math.round(g))}${getHexFromInt(Math.round(b))}` +
+      `${getHexFromInt(Math.round(a * 255))}`;
   }
 
   static getColorStringRgba(r : number, g : number, b : number, a : number) : string {
