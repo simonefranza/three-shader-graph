@@ -78,8 +78,7 @@ export default defineComponent({
       }
       const inputColor : ColorVariable = this.input.getValue();
       inputColor.value.setHSL([h, s, l, a]);
-      const color : Vector4 = this.input.getValue().value;
-      this.startValue = new Color(ColorSpace.HSL, color.x, color.y, color.z, color.w);
+      this.startValue.clone(inputColor.value) ;
       this.emitter.emit("recompile");
     },
     togglePicker(e : PointerEvent) {

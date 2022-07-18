@@ -92,7 +92,6 @@ export default defineComponent({
       const gradientBar = <HTMLElement>this.$refs.gradientBar;
       let newGradient = 'linear-gradient(to right, ';
       this.pickers.forEach((picker, idx) => {
-        console.log(picker, picker.color);
         newGradient += `${picker.color.getColorStringRgba()} ${Math.round(picker.position * 100)}%`
         if (idx !== this.pickers.length - 1) {
           newGradient += ", ";
@@ -142,7 +141,6 @@ export default defineComponent({
   },
   watch: {
     pickers() {
-      console.log("Pickers changed");
       this.updateGradient();
       this.genColors();
       this.updateGraphNode();
@@ -158,7 +156,6 @@ export default defineComponent({
         return;
       }
       const tempPicker = this.pickers[this.selectedPicker];
-      console.log(parseFloat(this.tempPickerPosition), 'pars');
       this.pickers[this.selectedPicker].position = Math.max(Math.min(parseFloat(this.tempPickerPosition) / 100, 1), 0);
       this.pickers.sort((a, b) => {
         return a.position - b.position;
@@ -166,7 +163,6 @@ export default defineComponent({
       this.selectedPicker = this.pickers.indexOf(tempPicker);
       // To force watcher
       this.tempPickerPosition = (100 * this.pickers[this.selectedPicker].position).toFixed(0);
-      console.log("new temp", this.tempPickerPosition);
       this.updateGradient();
       this.genColors();
       this.updateGraphNode();
@@ -175,7 +171,6 @@ export default defineComponent({
   mounted() {
     this.gradient = this.baseNode.getGradient();
     this.pickers = this.gradient.getPickers();
-    console.log(this.pickers[0]);
     this.selectedPicker = 0;
   }
 });

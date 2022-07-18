@@ -86,7 +86,7 @@ export default defineComponent({
       colorSpace : "",
       colorString : "#110000",
       componentNames : ["H", "S", "V", "A"],
-      componentValues : [0, 0, 0, 100],
+      componentValues : [0, 0, 0, 0],
       stringComponentValues : ["0", "0", "0", "100"],
     };
   },
@@ -298,6 +298,7 @@ export default defineComponent({
     setSelector() {
       const hsv = this.defaultValue.getHsv()
       const [h, s, v] = [hsv.x, hsv.y, hsv.z];
+      const alpha = this.defaultValue.getAlpha();
       //this.hue = h;
       //this.saturation = s;
       //this.value = v;
@@ -308,6 +309,15 @@ export default defineComponent({
         (-v + 1) * barBounding.height
       );
       barSelector.style.top = `${topBar}px`;
+
+      const alphaBar = (<HTMLElement>this.$refs.alphaBar);
+      const alphaBarBounding = alphaBar.getBoundingClientRect();
+      const alphaBarSelector = (<HTMLElement>this.$refs.alphaBarSelector);
+      const {top : topAlphaBar} = this.scaleOffsetToPixels(
+        (1 - alpha) * alphaBarBounding.height
+      );
+      alphaBarSelector.style.top = `${topAlphaBar}px`;
+
       const angle = h * Math.PI / 180;
       const sin = Math.sin(angle + Math.PI / 2);
       const cos = Math.cos(angle + Math.PI / 2);
@@ -350,7 +360,7 @@ export default defineComponent({
         default:
           throw "[colorSpace] Unknown color space";
       }
-      this.stringComponentValues[3] = this.componentValues[3].toFixed(2);
+      //this.stringComponentValues[3] = this.componentValues[3].toFixed(2);
     },
     updateComponentValues() {
       switch (this.colorSpace) {
@@ -613,6 +623,7 @@ export default defineComponent({
     //},
   },
   mounted() {
+    console.log("new def", this.defaultValue);
     this.color.clone(this.defaultValue);
     const container = <HTMLElement>this.$refs.container;
     if (this.showBelow) {
