@@ -112,14 +112,14 @@ export default defineComponent({
     width: 100%;
     border-radius: 5px;
     box-sizing: border-box;
-    height: 1.35rem;
+    height: 22px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 .shader-node-color-input-active-container {
   width: 50px;
-  height: 1.35rem;
+  height: 22px;
   position: relative;
   border-radius: 5px;
 }
@@ -131,8 +131,8 @@ export default defineComponent({
     linear-gradient(-45deg, #888 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, #888 75%),
     linear-gradient(-45deg, white 75%, #888 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  background-size: 22px 22px;
+  background-position: 0 0, 0 11px, 11px -11px, -11px 0px;
   position: absolute;
   border-radius: 5px;
 }

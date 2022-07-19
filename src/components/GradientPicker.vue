@@ -25,12 +25,20 @@
           @newValue="setNewPosition"
         ></input-field>
       </span>
-      <span 
-        class="gradient-color-picker-color"
-        :style="{backgroundColor : colors[selectedPicker]}"
-        @pointerup="toggleColorPicker"
+      <div 
+        class="gradient-color-picker-color-container"
         >
-      </span>
+        <div 
+          class="gradient-color-picker-color-bg"
+          >
+          </div>
+        <div 
+          class="gradient-color-picker-color"
+          :style="{backgroundColor : colors[selectedPicker]}"
+          @pointerup="toggleColorPicker"
+          >
+        </div>
+      </div>
       <ColorPicker ref="colorPicker" v-if="showColorPicker" 
         :defaultValue="pickers[selectedPicker].color"
         :showBelow="true"
@@ -216,16 +224,33 @@ export default defineComponent({
 }
 
 .gradient-color-picker-position,
-.gradient-color-picker-color {
-  height: 1.35rem;
-  display: inline-block;
+.gradient-color-picker-color-container {
+  height: 22px;
+}
+.gradient-color-picker-color-container {
+  width: 40%;
+  border-radius: 5px;
+  outline: 0.5px solid #696969;
   position: relative;
 }
+.gradient-color-picker-color-bg,
 .gradient-color-picker-color {
-  width: 40%;
-  background: red;
+  position: absolute;
   border-radius: 5px;
-  outline: #696969;
+  width: 100%;
+  height: 100%;
+}
+.gradient-color-picker-color-bg {
+  background-image:
+    linear-gradient(45deg, #888 25%, transparent 25%),
+    linear-gradient(-45deg, #888 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #888 75%),
+    linear-gradient(-45deg, white 75%, #888 75%);
+  background-size: 22px 22px;
+  background-position: 0 0, 0 11px, 11px -11px, -11px 0px;
+}
+.gradient-color-picker-color{
+  background: red;
 }
 .gradient-color-picker-position {
   width: 50%;
