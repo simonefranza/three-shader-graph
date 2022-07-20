@@ -102,15 +102,16 @@ export default defineComponent({
   &::before{
     position: relative;
     content: "";
-    height: 10px;
+    height: 5px;
     background-color: #111;
     width: 2px;
     display: block;
     left: 50%;
-    border-radius: 10px;
-    transform: translate(-50%, 50%);
+    border-radius: 0 0 10px 10px;
+    transform: translate(-50%, 2%);
     z-index: -1;
     border: 0.5px solid #eee;
+    top: 100%;
   }
 }
 </style>
