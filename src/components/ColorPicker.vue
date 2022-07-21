@@ -86,7 +86,7 @@ export default defineComponent({
       colorSpace : "",
       colorString : "#110000",
       componentNames : ["H", "S", "V", "A"],
-      componentValues : [0, 0, 0, 0],
+      componentValues : [0, 0, 0, 1],
       stringComponentValues : ["0", "0", "0", "100"],
     };
   },
@@ -174,7 +174,6 @@ export default defineComponent({
       this.moveWheelSelector(e);
     },
     moveBarSelector(e : PointerEvent, bar : HTMLElement, selector : HTMLElement) {
-      // TODO Fix issue when moving bar and pointer up is on node color (closes picker)
       const bounding = bar.getBoundingClientRect();
       if (e.clientY > bounding.top + bounding.height) {
         const {top} = this.scaleOffsetToPixels(
