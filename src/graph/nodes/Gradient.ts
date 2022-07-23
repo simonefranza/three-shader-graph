@@ -3,13 +3,13 @@ import { Color } from "../utils/Color";
 export class Gradient {
   pickers: Picker[];
 
-  #interpolation : Interpolation;
+  interpolation : Interpolation;
 
   constructor(
       pickers: Picker[],
       interpolation ?: Interpolation,
   ) {
-    this.#interpolation = interpolation || Interpolation.Linear;
+    this.interpolation = interpolation || Interpolation.Linear;
     this.pickers = [ ...pickers ];
   }
 
@@ -18,11 +18,12 @@ export class Gradient {
   }
 
   setPickers(newPickers : Picker[]) {
+    console.log(this.pickers.length, newPickers.length);
     this.pickers = [ ...newPickers ];
   }
 
   getInterpolation() : Interpolation {
-    return this.#interpolation;
+    return this.interpolation;
   }
 
   findSidePickers(pos : number) : [Picker, Picker] {
@@ -62,12 +63,12 @@ export class Gradient {
       throw "[Gradient] Position is outside of bound: " + pos;
     }
     const [ pickerBefore, pickerAfter ] = this.findSidePickers(pos);
-    if (this.#interpolation === Interpolation.Constant) {
+    if (this.interpolation === Interpolation.Constant) {
       return this.handleInterpolationConstant(pickerBefore);
-    } else if (this.#interpolation === Interpolation.Linear) {
+    } else if (this.interpolation === Interpolation.Linear) {
       return this.handleInterpolationLinear(pos, pickerBefore, pickerAfter);
     }
-    throw "[Gradient] Interpolation not implemented: " + this.#interpolation;
+    throw "[Gradient] Interpolation not implemented: " + this.interpolation;
   }
 }
 

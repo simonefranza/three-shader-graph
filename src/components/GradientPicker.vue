@@ -1,6 +1,22 @@
 <template>
   <div class="gradient-picker-container"> 
-    <span>Delete Add</span>
+    <div class="gradient-picker-top">
+      <div class="gradient-picker-btn">
+        <button 
+          @pointerdown="removePicker"
+          class="gradient-picker-btn-el">
+          <img alt="-" src="icons/minus-icon.svg" />
+        </button>
+        <button 
+          @pointerdown="addPicker"
+          class="gradient-picker-btn-el">
+          <img alt="+" src="icons/plus-icon.svg" />
+        </button>
+      </div>
+      <div class="gradient-picker-space">
+        Interpolation
+      </div>
+    </div>
     <div class="gradient-picker-gradient">
       <div ref="gradientBar" class="gradient-picker-gradient-bar">
         <GradientPick 
@@ -85,6 +101,43 @@ export default defineComponent({
     },
   },
   methods: {
+    removePicker() {
+      if (this.pickers.length === 2) {
+        console.log("Cannot remove any more pickers");
+        return;
+      }
+      this.pickers.splice(this.selectedPicker, 1);
+      this.gradient?.setPickers(this.pickers);
+      console.log("Removed picker", this.selectedPicker, this.pickers);
+      this.updateGradient();
+      this.genColors();
+      this.updateGraphNode();
+    },
+    addPicker() {
+      console.log("add");
+      let newPos = this.pickers[this.selectedPicker].position;
+      if (this.selectedPicker !== this.pickers.length - 1) {
+        newPos = (newPos + this.pickers[this.selectedPicker + 1].position) / 2;
+      } else {
+        newPos = (newPos + this.pickers[this.selectedPicker - 1].position) / 2;
+      }
+      console.log("newpos", newPos);
+      const newPicker = <Picker>{position: newPos, color: this.gradient?.getColorAt(newPos)};
+      let newIdx = 0;
+      if (this.selectedPicker !== this.pickers.length - 1) {
+        this.pickers.splice(this.selectedPicker + 1, 0, newPicker);
+        newIdx = this.selectedPicker + 1;
+      } else {
+        this.pickers.splice(this.selectedPicker - 1, 0, newPicker);
+        newIdx = this.selectedPicker - 1;
+      }
+      console.log("final", this.pickers);
+      this.selectedPicker = newIdx;
+      this.gradient?.setPickers(this.pickers);
+      this.updateGradient();
+      this.genColors();
+      this.updateGraphNode();
+    },
     genColors() {
       this.pickers.forEach((picker, idx) => {
         this.colors[idx] = picker.color.getColorStringRgba();
@@ -107,6 +160,7 @@ export default defineComponent({
           newGradient += ")";
         }
       });
+      console.log("new grad", newGradient);
       gradientBar.style.backgroundImage = newGradient;
     },
     updateGraphNode() {
@@ -259,5 +313,65 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+}
+
+.gradient-picker-top {
+  height: 1rem;
+  width: 100%;
+  position: relative;
+  padding-block: 0.25rem;
+  box-sizing: border-box;
+  margin-block: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gradient-picker-btn {
+  width: 2.5rem;
+  height: 1.2rem;
+  border-radius: 13px;
+  position: relative;
+  outline: 0.5px solid #696969;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  &-el {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #252525;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    cursor: pointer;
+  }
+  &-el:active{
+    background-color: #151515;
+  }
+  &-el:first-child {
+    border-radius: 13px 0 0 13px;
+  }
+  &-el:first-child:after {
+    content: " ";
+    height: 100%;
+    width: 0.5px;
+    background-color: #696969;
+    position: absolute;
+    right: 0;
+    transform: translateX(50%);
+    z-index: 100;
+    top: 0;
+  }
+  &-el:last-child {
+    border-radius: 0 13px 13px 0;
+  }
+  &-el img {
+    width: 60%;
+    height: 60%;
+    position: relative;
+  }
 }
 </style>
