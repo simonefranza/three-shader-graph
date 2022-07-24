@@ -26,6 +26,10 @@ export class Gradient {
     return this.interpolation;
   }
 
+  setInterpolation(newInterp : Interpolation) {
+    console.log("new interp", newInterp); this.interpolation = newInterp;
+  }
+
   findSidePickers(pos : number) : [Picker, Picker] {
     let idx = -1;
     if (this.pickers[0].position >= pos) {

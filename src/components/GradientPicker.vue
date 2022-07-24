@@ -4,7 +4,7 @@
       <div class="gradient-picker-btn">
         <button 
           @pointerdown="removePicker"
-          class="gradient-picker-btn-el">
+          :class="['gradient-picker-btn-el', {'disabled' : !canRemovePicker}]">
           <img alt="-" src="icons/minus-icon.svg" />
         </button>
         <button 
@@ -13,8 +13,12 @@
           <img alt="+" src="icons/plus-icon.svg" />
         </button>
       </div>
-      <div class="gradient-picker-space">
-        Interpolation
+      <div class="gradient-picker-interpolation">
+        <dropdown
+          :options="dropdownOptions"
+          :selected="selectedInterpolation"
+          @optionChosen="(idx) => { selectedInterpolation = idx }"
+        ></dropdown>
       </div>
     </div>
     <div class="gradient-picker-gradient">
@@ -22,7 +26,7 @@
         <GradientPick 
           @pointerdown="selectedPicker = idx"
           v-for="(pick, idx) in pickers"
-          :key="colors[idx]"
+          :key="pick"
           :position="pick.position"
           :color="colors[idx]"
           :isSelected="selectedPicker === idx"
@@ -69,16 +73,19 @@ import { PropType, defineComponent } from 'vue'
 import { ColorRamp } from "../graph/nodes/ColorRamp";
 import {Emitter} from "mitt";
 import {Events} from "../graph/Manager";
-import { Gradient, Picker } from "../graph/nodes/Gradient";
+import { Gradient, Picker, Interpolation } from "../graph/nodes/Gradient";
 import GradientPick from "./GradientPick.vue";
 import ColorPicker from "./ColorPicker.vue";
 import InputField from "./InputField.vue";
+import Dropdown from "./Dropdown.vue";
+import { Color, ColorSpace } from "../graph/utils/Color";
 
 export default defineComponent({
   components: {
     GradientPick,
     ColorPicker,
     InputField,
+    Dropdown,
   },
   data() {
     return {
@@ -88,6 +95,7 @@ export default defineComponent({
       selectedPicker : -1,
       showColorPicker : false,
       tempPickerPosition : "",
+      selectedInterpolation : 0,
     };
   },
   props: {
@@ -100,15 +108,29 @@ export default defineComponent({
       required: true,
     },
   },
+  computed: {
+    dropdownOptions() {
+      const colors = Object.keys(Interpolation).filter((interpolation) => {
+        return isNaN(Number(interpolation));
+      });
+      return colors;
+    },
+    canRemovePicker() {
+      return this.pickers.length > 2;
+    },
+  },
   methods: {
     removePicker() {
-      if (this.pickers.length === 2) {
+      if (!this.canRemovePicker) {
         console.log("Cannot remove any more pickers");
         return;
       }
       this.pickers.splice(this.selectedPicker, 1);
       this.gradient?.setPickers(this.pickers);
       console.log("Removed picker", this.selectedPicker, this.pickers);
+      if (this.selectedPicker === this.pickers.length) {
+        this.selectedPicker--;
+      }
       this.updateGradient();
       this.genColors();
       this.updateGraphNode();
@@ -122,7 +144,8 @@ export default defineComponent({
         newPos = (newPos + this.pickers[this.selectedPicker - 1].position) / 2;
       }
       console.log("newpos", newPos);
-      const newPicker = <Picker>{position: newPos, color: this.gradient?.getColorAt(newPos)};
+      const newPicker = <Picker>{position: newPos, color: new Color(ColorSpace.HEX, 0, 0, 0, 1)};
+      newPicker.color.clone(this.gradient!.getColorAt(newPos));
       let newIdx = 0;
       if (this.selectedPicker !== this.pickers.length - 1) {
         this.pickers.splice(this.selectedPicker + 1, 0, newPicker);
@@ -139,9 +162,12 @@ export default defineComponent({
       this.updateGraphNode();
     },
     genColors() {
+      console.log("len", this.pickers.length, this.colors.length);
       this.pickers.forEach((picker, idx) => {
+        console.log(picker.color.getColorStringRgba());
         this.colors[idx] = picker.color.getColorStringRgba();
       });
+      console.log(this.colors);
     },
     updateColor(color : [number, number, number, number]) {
       this.pickers[this.selectedPicker].color.setRGB(color);
@@ -149,7 +175,23 @@ export default defineComponent({
       this.genColors();
       this.updateGraphNode();
     },
-    updateGradient() {
+    updateGradientConstant() {
+      const gradientBar = <HTMLElement>this.$refs.gradientBar;
+      let newGradient = 'linear-gradient(to right, ';
+      this.pickers.forEach((picker, idx) => {
+        newGradient += `${picker.color.getColorStringRgba()} ` +
+          `${Math.round(picker.position * 100)}%`
+        if (idx !== this.pickers.length - 1) {
+          newGradient += `, ${picker.color.getColorStringRgba()} ` +
+            `${Math.round(this.pickers[idx + 1].position * 100)}%, `
+        } else {
+          newGradient += ")";
+        }
+      });
+      console.log("New const grad", newGradient);
+      gradientBar.style.backgroundImage = newGradient;
+    },
+    updateGradientLinear() {
       const gradientBar = <HTMLElement>this.$refs.gradientBar;
       let newGradient = 'linear-gradient(to right, ';
       this.pickers.forEach((picker, idx) => {
@@ -160,8 +202,19 @@ export default defineComponent({
           newGradient += ")";
         }
       });
-      console.log("new grad", newGradient);
       gradientBar.style.backgroundImage = newGradient;
+    },
+    updateGradient() {
+      switch (<Interpolation>this.selectedInterpolation) {
+        case Interpolation.Constant:
+          this.updateGradientConstant();
+          break;
+        case Interpolation.Linear:
+          this.updateGradientLinear();
+          break;
+        default:
+          throw "[GradientPicker:updateGradient] invalid interpolation";
+      }
     },
     updateGraphNode() {
       this.gradient?.setPickers([...this.pickers]);
@@ -229,6 +282,13 @@ export default defineComponent({
       this.genColors();
       this.updateGraphNode();
     },
+    selectedInterpolation() {
+      this.gradient?.setInterpolation(<Interpolation>this.selectedInterpolation);
+      this.emitter.emit("recompile");
+      this.updateGradient();
+      this.genColors();
+      this.updateGraphNode();
+    }
   },
   mounted() {
     this.gradient = this.baseNode.getGradient();
@@ -316,10 +376,8 @@ export default defineComponent({
 }
 
 .gradient-picker-top {
-  height: 1rem;
   width: 100%;
   position: relative;
-  padding-block: 0.25rem;
   box-sizing: border-box;
   margin-block: 1rem;
   display: flex;
@@ -348,6 +406,13 @@ export default defineComponent({
     padding: 0;
     cursor: pointer;
   }
+  &-el.disabled {
+    background-color: #4a4a4a;
+    cursor: initial;
+  }
+  &-el.disabled:active {
+    background-color: #4a4a4a;
+  }
   &-el:active{
     background-color: #151515;
   }
@@ -373,5 +438,10 @@ export default defineComponent({
     height: 60%;
     position: relative;
   }
+}
+.gradient-picker-interpolation{
+  height: 1.5rem;
+  width: 50%;
+  position: relative;
 }
 </style>
