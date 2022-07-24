@@ -16,8 +16,7 @@
     :emitter="emitter"
   ></ColorInput>
   <span v-else>
-    <span class="shader-node-input-label">{{input.getType()}} aaaa- {{state}} - {{input.getName()}}</span>
-    <input class="shader-node-input-field" type="text" v-model="value"/>
+    <span class="shader-node-input-label">{{input.getType()}} - {{state}} - {{input.getName()}}</span>
   </span>
 
 </template>

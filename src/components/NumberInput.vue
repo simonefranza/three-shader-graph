@@ -1,6 +1,6 @@
 <template>
-  <div ref="inputContainer" class="shader-node-number-input">
-    <span v-if="state === State.Init"
+  <div ref="inputContainer" :class="['shader-node-number-input', {'connected': isConnected}]">
+    <span v-if="state === State.Init && !isConnected"
       :class="['shader-node-number-input-container', {'single-element' : isSmallRange}]"
     >
       <span v-if="!isSmallRange" class="shader-node-arrow-left"
@@ -20,10 +20,15 @@
           class="shader-node-arrow-img"
         /></span>
     </span>
-    <span v-else
+    <span v-else-if="!isConnected"
       class="shader-node-number-input-active"
       >
       <input ref="inputField" class="shader-node-number-input-field" type="text" v-model="tempValue"/>
+    </span>
+    <span v-else
+      class="shader-node-number-input-connected"
+    >
+      <span class="shader-node-number-input-label">{{input.getName()}}</span>
     </span>
   </div>
 </template>
@@ -50,6 +55,7 @@ export default defineComponent({
       lastPositionX: 0,
       startElement : null as null | HTMLElement,
       pointerMoved : false,
+      isConnected : false,
     };
   },
   props: {
@@ -165,9 +171,13 @@ export default defineComponent({
         this.value = this.minValue;
       }
       this.tempValue = this.value.toFixed(3).toString();
-    }
+    },
+    checkIsConnected() {
+      this.isConnected = this.input.isConnected();
+    },
   },
   mounted() {
+    this.emitter.on("recompile", this.checkIsConnected);
     this.value = this.input.getValue().value;
     if (this.value === null) {
       throw "[NumberInput] value is null";
@@ -201,12 +211,23 @@ export default defineComponent({
     grid-template-columns: 1fr;
   }
 }
+.shader-node-number-input-connected {
+  position: relative;
+  height: 1.35rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: 5px;
+}
 .shader-node-number-input {
   pointer-events: all;
   width: 100%;
+  box-sizing: border-box;
   background-color: #252525;
   border-radius: 5px;
-  box-sizing: border-box;
+  &.connected {
+    background-color: transparent;
+  }
 }
 .shader-node-input-field {
   display: inline;
