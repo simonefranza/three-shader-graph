@@ -1,21 +1,22 @@
 <template>
-  <div id="container">
-    </div>
+  <div ref="container" id="container">
+  </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue'
 import { Manager } from "../graph/Manager";
-let manager = null;
-export default {
+
+export default defineComponent({
   data() {
     return {
       scale: 1,
     };
   },
   mounted() {
-    manager = new Manager(document.getElementById("container"));
+    new Manager(<HTMLElement>this.$refs.container);
   },
-}
+})
 </script>
 
 <style scoped>

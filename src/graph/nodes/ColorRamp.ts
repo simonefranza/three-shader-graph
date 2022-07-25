@@ -27,8 +27,15 @@ export class ColorRamp extends BaseNode {
       ]},
       new BaseOutput("color", "color"),
     );
-    this.gradient = new Gradient([ {position : 0, color : new Color(ColorSpace.RGB, 0, 0, 0, 1)},
-      {position : 1, color : new Color(ColorSpace.RGB, 255, 255, 255, 1)} ], Interpolation.Linear);
+    this.gradient = new Gradient([ {
+      position : 0,
+      color : new Color(ColorSpace.RGB, 0, 0, 0, 1),
+      id : Math.floor(Math.random() * 1000000000)
+    },
+    {position : 1,
+     color : new Color(ColorSpace.RGB, 255, 255, 255, 1),
+     id : Math.floor(Math.random() * 1000000000)
+    } ], Interpolation.Linear);
     this.inputVariables = {};
     const list : BaseInput[] = super.getInputs().inputList;
     list.forEach((input : BaseInput) => {
@@ -71,10 +78,18 @@ export class ColorRamp extends BaseNode {
     [ facVarName, ] = prevParent.compile(vert, frag);
     const pickers : Picker[] = this.gradient.getPickers();
     if (pickers[0].position !== 0) {
-      pickers.unshift({position : 0, color : pickers[0].color});
+      pickers.unshift({
+        position : 0,
+        color : pickers[0].color,
+        id : Math.floor(Math.random() * 1000000000)
+      });
     }
     if (pickers[pickers.length - 1].position !== 1) {
-      pickers.push({position : 1, color : pickers[pickers.length - 1].color});
+      pickers.push({
+        position : 1,
+        color : pickers[pickers.length - 1].color,
+        id : Math.floor(Math.random() * 1000000000)
+      });
     }
     const numPickerVarName = vert.generateVariableID("COL_RAMP_NUM_PICKER_");
     const pickerVarName = vert.generateVariableID("col_ramp_picker_color_");
@@ -117,10 +132,18 @@ export class ColorRamp extends BaseNode {
     [ facVarName, ] = prevParent.compile(vert, frag);
     const pickers : Picker[] = this.gradient.getPickers();
     if (pickers[0].position !== 0) {
-      pickers.unshift({position : 0, color : pickers[0].color});
+      pickers.unshift({
+        position : 0,
+        color : pickers[0].color,
+        id : Math.floor(Math.random() * 1000000000)
+      });
     }
     if (pickers[pickers.length - 1].position !== 1) {
-      pickers.push({position : 1, color : pickers[pickers.length - 1].color});
+      pickers.push({
+        position : 1,
+        color : pickers[pickers.length - 1].color,
+        id : Math.floor(Math.random() * 1000000000)
+      });
     }
     const numPickerVarName = vert.generateVariableID("COL_RAMP_NUM_PICKER_");
     const pickerVarName = vert.generateVariableID("col_ramp_picker_color_");

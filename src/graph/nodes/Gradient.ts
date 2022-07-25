@@ -33,7 +33,9 @@ export class Gradient {
   findSidePickers(pos : number) : [Picker, Picker] {
     let idx = -1;
     if (this.pickers[0].position >= pos) {
-      return [ {position : 0, color : this.pickers[0].color}, this.pickers[0] ];
+      return [ {position : 0,
+                color : this.pickers[0].color,
+                id : Math.floor(Math.random() * 1000000000)}, this.pickers[0] ];
     }
     for (let i = 0; i < this.pickers.length - 1; i++) {
       if (this.pickers[i].position <= pos && this.pickers[i + 1].position >= pos) {
@@ -43,7 +45,10 @@ export class Gradient {
     }
     if (idx === -1) {
       return [ this.pickers[this.pickers.length - 1],
-        {position : 1, color : this.pickers[this.pickers.length - 1].color} ];
+        {position : 1,
+         color : this.pickers[this.pickers.length - 1].color,
+         id : Math.floor(Math.random() * 1000000000)
+        } ];
     }
     return [ this.pickers[idx], this.pickers[idx + 1] ];
   }
@@ -84,4 +89,5 @@ export enum Interpolation {
 export interface Picker {
   position: number,
   color : Color,
+  id : number,
 }

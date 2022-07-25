@@ -2,7 +2,7 @@
   <span class="">
     <div class="shader-node-title">{{title}}</div>
     <div class="shader-node-body">
-      <div v-if ="title === 'ColorRamp'" class="shader-node-additional">
+      <div v-if ="baseNode instanceof colorRamp" class="shader-node-additional">
         <GradientPicker
           :baseNode="baseNode"
           :emitter="emitter"
@@ -41,6 +41,7 @@ import {Events} from "../graph/Manager";
 import { BaseOutput } from "../graph/nodes/BaseOutput";
 import { BaseInput } from "../graph/nodes/BaseInput";
 import { BaseNode } from "../graph/nodes/BaseNode";
+import { ColorRamp } from "../graph/nodes/ColorRamp";
 import { RendererNode } from "../graph/renderer/RendererNode";
 import InputComponent from "./InputComponent.vue";
 import OutputComponent from "./OutputComponent.vue";
@@ -51,6 +52,11 @@ export default defineComponent({
     InputComponent,
     OutputComponent,
     GradientPicker,
+  },
+  data() {
+    return {
+      colorRamp : ColorRamp,
+    };
   },
   props: {
     baseNode : {

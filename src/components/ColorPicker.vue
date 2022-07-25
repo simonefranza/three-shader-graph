@@ -61,12 +61,12 @@
         ref="copyIcon"
         @click="copyColor"
         class="color-picker-icons">
-        <img src="icons/copy-icon.svg" alt="copy icon" />
+        <img src="../../public/icons/copy-icon.svg" alt="copy icon" />
       </button>
       <!--<button 
         @click="pickColor"
         class="color-picker-icons">
-        <img src="icons/picker-icon.svg" alt="picker icon" />
+        <img src="../../public/icons/picker-icon.svg" alt="picker icon" />
       </button>-->
     </div>
   </div>
@@ -585,9 +585,9 @@ export default defineComponent({
       console.log("Copied", value);
       let btn = <HTMLElement>this.$refs.copyIcon;
       let img = btn.querySelector("img");
-      img?.setAttribute("src", "icons/tick-icon.svg");
+      img?.setAttribute("src", "../../public/icons/tick-icon.svg");
       setTimeout(() => {
-        img?.setAttribute("src", "icons/copy-icon.svg");
+        img?.setAttribute("src", "../../public/icons/copy-icon.svg");
       }, 1500);
     },
   },

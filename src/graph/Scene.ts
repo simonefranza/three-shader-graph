@@ -46,6 +46,9 @@ export class Scene {
     this.stats.dom.style.left = "";
     this.stats.dom.style.display = "flex";
     this.stats.dom.style.justifyContent = "flex-end";
+    if (this.canvas.parentNode === null) {
+      throw "[Scene:constructor] canvas parent node is null";
+    }
     this.canvas.parentNode.appendChild(div);
     div.appendChild(this.stats.dom);
 

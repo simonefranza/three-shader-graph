@@ -27,7 +27,7 @@ export class ZoomPanManager {
 
   wheelHandler : (e : WheelEvent) => void;
 
-  resetStateTimeout : number | null;
+  resetStateTimeout : ReturnType<typeof setTimeout> | null;
 
   constructor(canvas : SVGForeignObjectElement, emitter : Emitter<Events>) {
     this.canvas = canvas;
