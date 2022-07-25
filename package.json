@@ -6,7 +6,8 @@
     "dev": "vite",
     "devHost": "vite --host",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "sh deploy.sh"
   },
   "dependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
