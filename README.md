@@ -18,8 +18,18 @@ Note:
 This project is still in its early stages, so the functionality is still limited
 and there might be bugs and issues. If you find one feel free to open an issue.
 
+## Usage
+
+- Use the purple line that separates the graph from the scene to resize one or the other
+- Add nodes to the graph (see Shortcuts)
+- Connect them by clicking on the small circles and dragging the mouse to the destination
+- The shader recompiles automatically
+- Click and drag a node to move it around
+- Scroll to zoom and if you use a touchpad use two fingers to move the graph around
+
 ## Shortcuts
 
 - Shift + A : opens the menu to add a new node to the graph
 - Shift + W : changes the orientation of the view from left - right, to top - bottom and viceversa
 - X (when a node is selected) : delete the node
+
