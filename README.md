@@ -13,6 +13,8 @@ recreate them in three-shader-graph to instantly get an idea of how the material
 will look. After you are happy with the result export the GLSL code and 
 use it in your projects!
 
+<img width="1030" alt="example" src="https://user-images.githubusercontent.com/6499758/181002198-a107f006-c55e-4dfb-8137-9a5164057f9c.png">
+
 Note:
 
 This project is still in its early stages, so the functionality is still limited
