@@ -30,7 +30,7 @@ export default defineComponent({
     },
   },
   methods: {
-    runCallback(e : PointerEvent, callback: Function) {
+    runCallback(e : MouseEvent, callback: Function) {
       e.cancelBubble = true;
       callback();
       this.$emit("closeMe");

@@ -5,12 +5,12 @@
         <button 
           @pointerdown="removePicker"
           :class="['gradient-picker-btn-el', {'disabled' : !canRemovePicker}]">
-          <img alt="-" src="../../public/icons/minus-icon.svg" />
+          <img alt="-" src="/icons/minus-icon.svg" />
         </button>
         <button 
           @pointerdown="addPicker"
           class="gradient-picker-btn-el">
-          <img alt="+" src="../../public/icons/plus-icon.svg" />
+          <img alt="+" src="/icons/plus-icon.svg" />
         </button>
       </div>
       <div class="gradient-picker-interpolation">

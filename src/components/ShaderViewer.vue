@@ -6,12 +6,12 @@
       ref="copyIcon"
       @click="copyShader"
       class="shader-viewer-icons">
-      <img src="../../public/icons/copy-icon.svg" alt="copy icon" />
+      <img src="/icons/copy-icon.svg" alt="copy icon" />
     </button>
     <button 
       @click="closeViewer"
       class="shader-viewer-close-icon">
-      <img src="../../public/icons/close-icon.svg" alt="x" />
+      <img src="/icons/close-icon.svg" alt="x" />
     </button>
   </div>
 </template>
@@ -47,9 +47,9 @@ export default defineComponent({
       console.log("Copied", inputEl.value);
       let btn = <HTMLElement>this.$refs.copyIcon;
       let img = btn.querySelector("img");
-      img?.setAttribute("src", "../../public/icons/tick-icon.svg");
+      img?.setAttribute("src", "/icons/tick-icon.svg");
       setTimeout(() => {
-        img?.setAttribute("src", "../../public/icons/copy-icon.svg");
+        img?.setAttribute("src", "/icons/copy-icon.svg");
       }, 1500);
     },
     handlePointerDown(e : PointerEvent) {

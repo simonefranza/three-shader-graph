@@ -6,7 +6,7 @@
         :class="['dropdown-button', {'showList' : !hideList}]"
         @click="hideList = !hideList"
       >
-        <img alt="v" src="../../public/icons/arrow-down-icon.svg" />
+        <img alt="v" src="/icons/arrow-down-icon.svg" />
       </button>
     </div>
     <div :class="['dropdown-list', {'hidden' : hideList}]">
