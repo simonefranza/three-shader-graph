@@ -20,7 +20,8 @@ export class GLSLManager {
     const vert = new VertexShader();
     const frag = new FragmentShader();
     const shaders = this.#startNode.compile(vert, frag);
-    return shaders;
+
+    return [shaders[0].trim(), shaders[1].trim()];
   }
 
 }

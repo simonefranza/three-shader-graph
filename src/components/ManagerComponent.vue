@@ -1,5 +1,8 @@
 <template>
   <div ref="container" id="manager-container">
+    <menu-bar
+      :emitter="emitter"
+    ></menu-bar>
     <div ref="graphView" id="manager-svg"></div>
     <div ref="divider" id="manager-divider"></div>
     <canvas ref="canvasView" id="manager-canvas"></canvas>
@@ -7,10 +10,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { PropType, defineComponent } from "vue";
+import { Emitter } from "mitt";
+import { Events } from "../graph/Manager";
+import MenuBar from "@/components/MenuBar.vue";
 
 export default defineComponent({
+  components: {
+    MenuBar,
+  },
   props: {
+    emitter: {
+      type: Object as PropType<Emitter<Events>>,
+      required: true,
+    },
     callback: {
       required: true,
       type: Function,
@@ -32,10 +45,12 @@ export default defineComponent({
 #manager-container {
   width: 100%;
   height: 100%;
+  position: relative;
   display: grid;
   grid-template-columns: 60fr 5px 40fr;
-  grid-template-rows: 1fr;
-  grid-template-areas: "svg divider canvas";
+  grid-template-rows: 26px 1fr;
+  grid-template-areas: "menu menu menu" "svg divider canvas";
+  z-index: 0;
 }
 
 #manager-canvas {

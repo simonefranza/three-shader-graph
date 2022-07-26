@@ -1,10 +1,7 @@
 import { Emitter } from "mitt";
 import { Events, PointerPosition } from "../Manager";
-import { OutputNode } from "../nodes/OutputNode";
 import { BaseNode } from "../nodes/BaseNode";
-import { PrincipledBSDF } from "../nodes/PrincipledBSDF";
-import { NoiseTexture } from "../nodes/NoiseTexture";
-import { ColorRamp } from "../nodes/ColorRamp";
+import { NodesList } from "../nodes/NodesList";
 
 export class RendererMenu {
   container: HTMLElement;
@@ -124,18 +121,12 @@ export class RendererMenu {
     const separator = document.createElement("div");
     separator.setAttribute("class", "shader-menu-sep");
 
-    const nodes = [
-      {name : "Material Output", nodeType : OutputNode},
-      {name : "Noise Texture", nodeType : NoiseTexture},
-      {name : "Principled BSDF", nodeType : PrincipledBSDF},
-      {name : "ColorRamp", nodeType : ColorRamp}
-    ];
-    
+    const nodes = NodesList.getNodesList();
     nodes.forEach((nodeDesc, idx) => {
       const node = document.createElement("span");
       node.setAttribute("class", "shader-menu-el");
       node.textContent = nodeDesc.name;
-      node.addEventListener("click", () => this.sendCreateEvent(nodeDesc.nodeType));
+      node.addEventListener("click", () => this.sendCreateEvent(nodeDesc.class));
       div.appendChild(node);
       if (idx !== nodes.length - 1) {
         div.appendChild(separator.cloneNode());

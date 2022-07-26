@@ -6,9 +6,16 @@
  */
 
 import * as THREE from "three";
+import { createApp } from "vue";
 import Stats from "stats.js";
 import { Events } from "./Manager";
-import {Emitter} from "mitt";
+import { Emitter } from "mitt";
+import ShaderViewer from "@/components/ShaderViewer.vue";
+
+interface ShaderStrings {
+  fragment: string,
+  vertex: string,
+};
 
 export class Scene {
   height: number;
@@ -32,6 +39,8 @@ export class Scene {
   clock: THREE.Clock;
 
   startedAnimation : boolean;
+
+  shaders : ShaderStrings;
   //startNode1: PrincipledBSDF;
 
   //manager1: GLSLManager;
@@ -92,12 +101,15 @@ export class Scene {
     this.scene.add( this.mesh );
 
     this.clock = new THREE.Clock();
+    this.shaders = {fragment : "", vertex : ""};
 
     addEventListener("resize", () => this.handleResize());
     this.emitter.on("resizeCanvas", () => this.handleResize());
     this.startedAnimation = false;
     this.emitter.on("newShaders", (shaders: [string, string]) => this.updateShaders(shaders));
     this.emitter.emit("recompile");
+    this.emitter.on("exportFragment", () => this.exportShader("fragment"));
+    this.emitter.on("exportVertex", () => this.exportShader("vertex"));
   }
 
   animate() {
@@ -114,6 +126,8 @@ export class Scene {
   updateShaders([ vertShader, fragShader ] : [string, string]) {
     const material = <THREE.ShaderMaterial> this.mesh.material;
     //console.log(fragShader);
+    this.shaders.fragment = fragShader;
+    this.shaders.vertex = vertShader;
     material.fragmentShader = fragShader;
     material.vertexShader = vertShader;
     material.needsUpdate = true;
@@ -136,5 +150,25 @@ export class Scene {
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
     this.canvas.style.minHeight = "";
+  }
+
+  exportShader(name : "fragment" | "vertex") {
+    console.log("export", name);
+    const app = document.getElementById("app");
+    if (app === null) {
+      throw "[Scene::exportShader] app is null";
+    }
+    const div = document.createElement("div");
+    div.setAttribute("id", "viewer");
+    app.appendChild(div);
+    console.log(name, this.shaders);
+    const shaderViewer = createApp(
+      ShaderViewer,
+      {
+        shader : this.shaders[name],
+        name,
+      }
+    );
+    shaderViewer.mount(div);
   }
 }

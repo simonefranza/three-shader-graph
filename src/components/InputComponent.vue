@@ -27,9 +27,9 @@ import ColorInput from "@/components/ColorInput.vue";
 import { PropType, defineComponent } from 'vue'
 import { BaseInput } from "../graph/nodes/BaseInput";
 import { RendererNode } from "../graph/renderer/RendererNode";
-import {Emitter} from "mitt";
-import {Events} from "../graph/Manager";
-import {Link} from "../graph/renderer/Link";
+import { Emitter } from "mitt";
+import { Events } from "../graph/Manager";
+import { Link } from "../graph/renderer/Link";
 
 enum State {
   Open,

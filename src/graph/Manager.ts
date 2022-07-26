@@ -26,6 +26,8 @@ export type Events = {
   repositionLinks: undefined;
   cancelLink: undefined;
   addLink: Link;
+  exportFragment: undefined;
+  exportVertex: undefined;
 };
 
 export class Manager {
@@ -54,6 +56,7 @@ export class Manager {
     const managerComponent = createApp(
       ManagerComponent,
       {
+        emitter : this.emitter,
         callback : (
             container : HTMLElement,
             graphView : HTMLElement,
