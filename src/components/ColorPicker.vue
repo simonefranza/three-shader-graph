@@ -77,6 +77,8 @@ import { PropType, defineComponent } from 'vue'
 import InputField from "./InputField.vue";
 import { ColorSpace, Color } from "../graph/utils/Color";
 import { clamp, getHexFromInt } from "../graph/utils/General";
+import tickIconUrl from "/icons/tick-icon.svg";
+import copyIconUrl from "/icons/copy-icon.svg"
 
 export default defineComponent({
   data() {
@@ -585,9 +587,9 @@ export default defineComponent({
       console.log("Copied", value);
       let btn = <HTMLElement>this.$refs.copyIcon;
       let img = btn.querySelector("img");
-      img?.setAttribute("src", "/icons/tick-icon.svg");
+      img?.setAttribute("src", tickIconUrl);
       setTimeout(() => {
-        img?.setAttribute("src", "/icons/copy-icon.svg");
+        img?.setAttribute("src", copyIconUrl);
       }, 1500);
     },
   },

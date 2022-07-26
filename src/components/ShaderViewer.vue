@@ -18,7 +18,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-
+import tickIconUrl from "/icons/tick-icon.svg";
+import copyIconUrl from "/icons/copy-icon.svg"
 export default defineComponent({
   data() {
     return {
@@ -47,9 +48,9 @@ export default defineComponent({
       console.log("Copied", inputEl.value);
       let btn = <HTMLElement>this.$refs.copyIcon;
       let img = btn.querySelector("img");
-      img?.setAttribute("src", "/icons/tick-icon.svg");
+      img?.setAttribute("src", tickIconUrl);
       setTimeout(() => {
-        img?.setAttribute("src", "/icons/copy-icon.svg");
+        img?.setAttribute("src", copyIconUrl);
       }, 1500);
     },
     handlePointerDown(e : PointerEvent) {
