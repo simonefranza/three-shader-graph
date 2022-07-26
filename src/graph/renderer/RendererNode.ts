@@ -7,7 +7,7 @@ import { Link, CanvasPosition, LinkElement } from "./Link";
 import * as Utils from "./utils";
 import {RendererNodeMovement} from "./RendererNodeMovement";
 import GraphNode from "../../components/GraphNode.vue";
-import {createApp } from "vue";
+import { createApp } from "vue";
 
 interface IncomingLink {
   link: Link,

@@ -4,6 +4,8 @@ import { ShaderGraphRenderer } from "./ShaderGraphRenderer";
 import { Scene } from "./Scene";
 import { Link, LinkElement } from "./renderer/Link";
 import { ViewManager } from "./renderer/ViewManager";
+import { createApp } from "vue";
+import ManagerComponent from "../components/ManagerComponent.vue";
 
 export interface PointerPosition {
   x: number;
@@ -31,66 +33,55 @@ export class Manager {
 
   emitter: Emitter<Events>;
 
-  style : string;
+  svgElement: HTMLElement | undefined;
 
-  svgElement: HTMLElement;
+  containerElement : HTMLElement | undefined;
 
-  containerElement : HTMLElement;
+  canvasElement: HTMLElement | undefined;
 
-  canvasElement: HTMLElement;
+  dividerElement: HTMLElement | undefined;
 
-  dividerElement: HTMLElement;
+  sceneManager : Scene | undefined;
 
-  sceneManager : Scene;
+  graphManager : ShaderGraphRenderer | undefined;
 
-  graphManager : ShaderGraphRenderer;
-
-  viewManager : ViewManager;
+  viewManager : ViewManager | undefined;
 
 
   constructor(element : HTMLElement) {
     this.element = element;
     this.emitter = mitt();
-    this.style = `
-#manager-container {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: 60fr 5px 40fr;
-  grid-template-rows: 1fr;
-  grid-template-areas: "svg divider canvas";
-}
+    const managerComponent = createApp(
+      ManagerComponent,
+      {
+        callback : (
+            container : HTMLElement,
+            graphView : HTMLElement,
+            divider : HTMLElement,
+            canvasView : HTMLElement
+        ) => {
+          this.setElements(
+            container,
+            graphView,
+            divider,
+            canvasView
+          );
+        },
+      }
+    );
+    managerComponent.mount(this.element);
+  }
 
-#manager-canvas {
-  grid-area: canvas;
-  width: 100%;
-  height: 100%;
-}
-
-#manager-divider {
-  grid-area: divider;
-  width: 100%;
-  height: 100%;
-  background-color: #9b3df1;
-  cursor: col-resize;
-}
-
-#manager-svg {
-  grid-area: svg;
-  background-image: radial-gradient(#2c2c2c 13%, transparent 13%);
-  background-position: 0 0;
-  background-size: 25px 25px;
-  background-color: #1b1b1b;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-      `;
-    this.addStyles();
-    [ this.containerElement,
-      this.svgElement,
-      this.dividerElement,
-      this.canvasElement ] = this.createView();
+  setElements(
+      container : HTMLElement,
+      graphView : HTMLElement,
+      divider : HTMLElement,
+      canvasView : HTMLElement
+  ) {
+    this.containerElement = container;
+    this.svgElement = graphView;
+    this.dividerElement = divider;
+    this.canvasElement = canvasView;
     this.graphManager = this.createGraphManager();
     this.sceneManager = this.createScene();
     this.viewManager = new ViewManager(
@@ -102,43 +93,17 @@ export class Manager {
     );
   }
 
-  addStyles() {
-    const styleSheet = document.createElement("style");
-    styleSheet.innerText = this.style;
-    document.head.appendChild(styleSheet);
-  }
-
-  createView() : [HTMLElement, HTMLElement, HTMLElement, HTMLElement] {
-    const container = document.createElement("div");
-    container.setAttribute("id", "manager-container");
-
-    const graphView = document.createElement("div");
-    graphView.setAttribute("id", "manager-svg");
-    container.appendChild(graphView);
-
-    //TODO enable
-    //graphView.addEventListener("contextmenu", (e : Event) => {
-    //  e.preventDefault();
-    //});
-
-    const divider = document.createElement("div");
-    divider.setAttribute("id", "manager-divider");
-    container.appendChild(divider);
-
-    const canvasView = document.createElement("canvas");
-    canvasView.setAttribute("id", "manager-canvas");
-    container.appendChild(canvasView);
-
-    this.element.appendChild(container);
-    return [ container, graphView, divider, canvasView ];
-  }
-
   createScene() : Scene {
+    if (this.canvasElement === undefined) {
+      throw "[Manager::createScene] canvasElement is undefined";
+    }
     return new Scene(this.canvasElement, this.emitter);
   }
 
   createGraphManager() : ShaderGraphRenderer {
+    if (this.svgElement === undefined) {
+      throw "[Manager::createGraphManager] svgElement is undefined";
+    }
     return new ShaderGraphRenderer(this.svgElement, this.emitter);
   }
-
 }

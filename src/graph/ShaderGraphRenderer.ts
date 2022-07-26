@@ -1,11 +1,17 @@
+/*
+ * Class: ShaderGraphRenderer
+ *
+ * This class is responsible for the graph part
+ *
+ */
 import { OutputNode } from "./nodes/OutputNode";
 import { RendererMenu } from "./renderer/RendererMenu";
 import { RendererNode } from "./renderer/RendererNode";
 import { KeyboardHandler } from "./renderer/KeyboadHandler";
 import { BaseNode } from "./nodes/BaseNode";
 import { Events, PointerPosition } from "./Manager";
-import {Emitter} from "mitt";
-import {GLSLManager}  from "./CodeManager";
+import { Emitter } from "mitt";
+import { GLSLManager }  from "./CodeManager";
 import { ZoomPanManager } from "./renderer/ZoomPanManager";
 
 export class ShaderGraphRenderer {

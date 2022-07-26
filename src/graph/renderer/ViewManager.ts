@@ -1,5 +1,12 @@
+/*
+ * Class: ViewManager
+ *
+ * This class is responsible to rotate the view when Shift + W is entered,
+ * as well as handling the resize, when dragging the divider
+ *
+ */
+
 import {Emitter} from "mitt";
-import { Layers } from "three";
 import {Events, PointerPosition} from "../Manager";
 
 enum Layout {

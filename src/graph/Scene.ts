@@ -1,3 +1,10 @@
+/*
+ * Class: Scene
+ *
+ * This class is responsible for the three.js scene
+ *
+ */
+
 import * as THREE from "three";
 import Stats from "stats.js";
 import { Events } from "./Manager";
