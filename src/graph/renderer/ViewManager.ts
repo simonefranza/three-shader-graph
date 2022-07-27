@@ -27,6 +27,8 @@ export class ViewManager {
 
   layout : Layout;
 
+  dividerWidth: number;
+
   dividerInitialPosition : PointerPosition;
 
   dividerMoveHandler : (e : PointerEvent) => void;
@@ -43,6 +45,7 @@ export class ViewManager {
     this.svgElement = svgElement;
     this.canvasElement = canvasElement;
     this.dividerElement = dividerElement;
+    this.dividerWidth = 8;
     this.layout = Layout.Adjacent;
     this.dividerMoveHandler = (e : PointerEvent) => this.handleDividerPointerMove(e);
     this.dividerUpHandler = () => this.handleDividerPointerUp();
@@ -68,13 +71,24 @@ export class ViewManager {
   }
 
   handleDividerPointerMove(e : PointerEvent) {
-    if (this.layout === Layout.Adjacent) {
-      const posX = e.clientX / innerWidth * 100;
-      this.containerElement.style.gridTemplateColumns = `${posX}fr 5px ${100 - posX}fr`;
-    } else if (this.layout === Layout.Stacked) {
-      const posY = e.clientY / innerHeight * 100;
-      this.containerElement.style.gridTemplateRows = `${posY}fr 5px ${100 - posY}fr`;
-    } else {
+    const graphWidth = e.clientX - this.dividerWidth / 2;
+    const graphHeight = innerHeight - e.clientY - this.dividerWidth / 2;
+    switch (this.layout) {
+    case Layout.Adjacent:
+      if (graphWidth > 10) {
+        this.containerElement.style.gridTemplateColumns =
+          `${graphWidth}px ${this.dividerWidth}px ` +
+              `${innerWidth - e.clientX - this.dividerWidth / 2}fr`;
+      }
+      break;
+    case Layout.Stacked:
+      if (graphHeight > 10) {
+        this.containerElement.style.gridTemplateRows =
+          `26px ${e.clientY - 26 - this.dividerWidth / 2}px ${this.dividerWidth}px ` +
+              `${graphHeight}px`;
+      }
+      break;
+    default:
       throw "[ViewManager] Layout type is unknown: " + this.layout;
     }
 
@@ -90,9 +104,9 @@ export class ViewManager {
 
   rotateView() {
     if (this.layout === Layout.Adjacent) {
-      this.containerElement.style.gridTemplateRows = "30fr 5px 70fr";
+      this.containerElement.style.gridTemplateRows = `26px 30fr ${this.dividerWidth}px 70fr`;
       this.containerElement.style.gridTemplateColumns = "1fr";
-      this.containerElement.style.gridTemplateAreas = "'canvas' 'divider' 'svg'";
+      this.containerElement.style.gridTemplateAreas = "'menu' 'canvas' 'divider' 'svg'";
       this.dividerElement.style.cursor = "row-resize";
       this.layout = Layout.Stacked;
     } else if (this.layout === Layout.Stacked) {

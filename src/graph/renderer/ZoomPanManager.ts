@@ -58,6 +58,12 @@ export class ZoomPanManager {
       const heightUnitsOld = this.heightUnits;
       this.widthUnits *= (bounding.width / this.widthPx);
       this.heightUnits *= (bounding.height / this.heightPx);
+      //if (this.heightPx > 0 && this.heightUnits !== 0) {
+      //} else if (this.heightUnits === 0) {
+      //  this.heightUnits = (bounding.height / this.heightPx);
+      //} else {
+      //  this.heightUnits = 0;
+      //}
       const noWidthDiff = Math.abs(widthUnitsOld - this.widthUnits) < 0.0000001;
       const noHeightDiff = Math.abs(heightUnitsOld - this.heightUnits) < 0.0000001;
       if (noWidthDiff && !noHeightDiff) {
@@ -82,7 +88,6 @@ export class ZoomPanManager {
 
   handleWheelInitial(e : WheelEvent) {
     this.canvas.removeEventListener("wheel", this.wheelHandler);
-    console.log(e.deltaX, e.deltaY);
     if (Math.abs(e.deltaX) < 0.01 && Math.abs(e.deltaY) !== 2) {
       // Zoom
       this.state = State.Zoom;
@@ -162,7 +167,6 @@ export class ZoomPanManager {
       this.wheelHandler = (e : WheelEvent) => this.handleWheelInitial(e);
       this.canvas.addEventListener("wheel", this.wheelHandler);
       this.resetStateTimeout = null;
-      console.log("Reset state");
     }, 150);
   }
 }

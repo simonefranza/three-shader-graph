@@ -47,7 +47,7 @@ export default defineComponent({
   height: 100%;
   position: relative;
   display: grid;
-  grid-template-columns: 60fr 5px 40fr;
+  grid-template-columns: 60fr 8px 40fr;
   grid-template-rows: 26px 1fr;
   grid-template-areas: "menu menu menu" "svg divider canvas";
   z-index: 0;
