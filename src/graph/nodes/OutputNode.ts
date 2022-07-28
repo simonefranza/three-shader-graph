@@ -12,7 +12,7 @@ export class OutputNode extends BaseNode {
   constructor() {
     super(
       "MaterialOutput",
-      new BaseInput(
+      {inputList : [ new BaseInput(
         "surface",
         "shader",
         "shader",
@@ -22,6 +22,18 @@ export class OutputNode extends BaseNode {
           value : new Vector4(0, 0, 0, 1)
         }
       ),
+      new BaseInput(
+        "displacement",
+        "displacement",
+        "displacement",
+        <ShaderVariable>{
+          name : "color",
+          type : "vec4",
+          value : new Vector4(0, 0, 0, 1)
+        }
+      )
+      ],
+      },
       <OutputList>{ outputList : [] }
     );
     this.inputVariables = {};

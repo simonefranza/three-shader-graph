@@ -14,9 +14,16 @@ ${super.compileVaryings()}
 ${super.compileIns()}
 ${super.compileOuts()}
 ${super.compileFunctions()}
+out vec3 projPosition;
+out vec3 newNormal;
 void main() {
   ${super.compileMain()}
-  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+projPosition = position;
+vec3 sg = position * 2.;
+
+newNormal = normalMatrix * normal;
+
+  gl_Position = projectionMatrix * (modelViewMatrix * vec4( position, 1.0 ) + vec4(newNormal, 1.0));
 
 }`;
   }

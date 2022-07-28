@@ -42,7 +42,8 @@ export class NoiseTexture extends BaseNode {
         new InputNumber(
           "distortion",
           "number",
-          0)
+          0
+        )
       ]},
       new BaseOutput("color", "color"),
     );
@@ -85,7 +86,7 @@ export class NoiseTexture extends BaseNode {
   return 0.;
 }`;
     this.noiseFunction = {
-      "mod289(vec3)" : 
+      "mod289(vec3)" :
     `
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex 
@@ -102,7 +103,7 @@ export class NoiseTexture extends BaseNode {
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }`,
-      "mod289(vec4)" : 
+      "mod289(vec4)" :
 `vec4 mod289(vec4 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }`,
