@@ -414,6 +414,9 @@ export default defineComponent({
       const bounding = container.getBoundingClientRect();
       if (e.clientX >= bounding.left && e.clientX <= bounding.right
         && e.clientY >= bounding.top && e.clientY <= bounding.bottom) {
+        console.log("inside");
+        e.cancelBubble = true;
+        e.preventDefault();
         return;
       }
       e.cancelBubble = true;
@@ -425,8 +428,10 @@ export default defineComponent({
       const bounding = container.getBoundingClientRect();
       if (e.clientX >= bounding.left && e.clientX <= bounding.right
         && e.clientY >= bounding.top && e.clientY <= bounding.bottom) {
+        console.log("inside close");
         return;
       }
+      console.log("outside close");
       e.cancelBubble = true;
       e.preventDefault();
       this.$nextTick(() => {
@@ -584,7 +589,6 @@ export default defineComponent({
 
       document.execCommand("copy");
       document.body.removeChild(inputEl);
-      console.log("Copied", value);
       let btn = <HTMLElement>this.$refs.copyIcon;
       let img = btn.querySelector("img");
       img?.setAttribute("src", tickIconUrl);
@@ -624,7 +628,6 @@ export default defineComponent({
     //},
   },
   mounted() {
-    console.log("new def", this.defaultValue);
     this.color.clone(this.defaultValue);
     const container = <HTMLElement>this.$refs.container;
     if (this.showBelow) {

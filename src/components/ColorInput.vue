@@ -12,7 +12,7 @@
         class="shader-node-color-input-active"
         ref="inputActive"
         :style="{backgroundColor : color}"
-        @pointerup="togglePicker"
+        @click="togglePicker"
         ></span>
     </span>
     <ColorPicker ref="colorPicker" v-if="state === State.Active" 
@@ -30,7 +30,6 @@ import { ColorVariable } from "../graph/shaders/CommonShader";
 import {Emitter} from "mitt";
 import {Events} from "../graph/Manager";
 import {Color, ColorSpace} from "../graph/utils/Color";
-import {Vector4}  from "three";
 
 enum State {
   Init,

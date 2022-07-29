@@ -127,7 +127,6 @@ export default defineComponent({
       }
       this.pickers.splice(this.selectedPicker, 1);
       this.gradient?.setPickers(this.pickers);
-      console.log("Removed picker", this.selectedPicker, this.pickers);
       if (this.selectedPicker === this.pickers.length) {
         this.selectedPicker--;
       }
@@ -136,14 +135,12 @@ export default defineComponent({
       this.updateGraphNode();
     },
     addPicker() {
-      console.log("add");
       let newPos = this.pickers[this.selectedPicker].position;
       if (this.selectedPicker !== this.pickers.length - 1) {
         newPos = (newPos + this.pickers[this.selectedPicker + 1].position) / 2;
       } else {
         newPos = (newPos + this.pickers[this.selectedPicker - 1].position) / 2;
       }
-      console.log("newpos", newPos);
       const newPicker = <Picker>{position: newPos, color: new Color(ColorSpace.HEX, 0, 0, 0, 1)};
       newPicker.color.clone(this.gradient!.getColorAt(newPos));
       let newIdx = 0;
@@ -154,7 +151,6 @@ export default defineComponent({
         this.pickers.splice(this.selectedPicker - 1, 0, newPicker);
         newIdx = this.selectedPicker - 1;
       }
-      console.log("final", this.pickers);
       this.selectedPicker = newIdx;
       this.gradient?.setPickers(this.pickers);
       this.updateGradient();
@@ -162,12 +158,9 @@ export default defineComponent({
       this.updateGraphNode();
     },
     genColors() {
-      console.log("len", this.pickers.length, this.colors.length);
       this.pickers.forEach((picker, idx) => {
-        console.log(picker.color.getColorStringRgba());
         this.colors[idx] = picker.color.getColorStringRgba();
       });
-      console.log(this.colors);
     },
     updateColor(color : [number, number, number, number]) {
       this.pickers[this.selectedPicker].color.setRGB(color);
@@ -188,7 +181,6 @@ export default defineComponent({
           newGradient += ")";
         }
       });
-      console.log("New const grad", newGradient);
       gradientBar.style.backgroundImage = newGradient;
     },
     updateGradientLinear() {

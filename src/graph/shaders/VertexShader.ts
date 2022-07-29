@@ -14,16 +14,15 @@ ${super.compileVaryings()}
 ${super.compileIns()}
 ${super.compileOuts()}
 ${super.compileFunctions()}
-out vec3 projPosition;
-out vec3 newNormal;
 void main() {
   ${super.compileMain()}
-projPosition = position;
-vec3 sg = position * 2.;
-
-newNormal = normalMatrix * normal;
-
-  gl_Position = projectionMatrix * (modelViewMatrix * vec4( position, 1.0 ) + vec4(newNormal, 1.0));
+//vec3 sg = position * 3.14 * 2.;
+//
+//vec3 newNormal = normalize(normalMatrix * normal);
+//
+//  gl_Position = projectionMatrix * (modelViewMatrix * vec4( position, 1.0 ) + 
+//vec4(sin(sg.x) * newNormal, 1.0));
+gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
 }`;
   }

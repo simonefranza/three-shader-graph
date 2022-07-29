@@ -18,7 +18,6 @@ export class Gradient {
   }
 
   setPickers(newPickers : Picker[]) {
-    console.log(this.pickers.length, newPickers.length);
     this.pickers = [ ...newPickers ];
   }
 
@@ -27,7 +26,7 @@ export class Gradient {
   }
 
   setInterpolation(newInterp : Interpolation) {
-    console.log("new interp", newInterp); this.interpolation = newInterp;
+    this.interpolation = newInterp;
   }
 
   findSidePickers(pos : number) : [Picker, Picker] {
