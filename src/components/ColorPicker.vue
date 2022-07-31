@@ -414,9 +414,7 @@ export default defineComponent({
       const bounding = container.getBoundingClientRect();
       if (e.clientX >= bounding.left && e.clientX <= bounding.right
         && e.clientY >= bounding.top && e.clientY <= bounding.bottom) {
-        console.log("inside");
-        e.cancelBubble = true;
-        e.preventDefault();
+        // inside
         return;
       }
       e.cancelBubble = true;
@@ -428,10 +426,9 @@ export default defineComponent({
       const bounding = container.getBoundingClientRect();
       if (e.clientX >= bounding.left && e.clientX <= bounding.right
         && e.clientY >= bounding.top && e.clientY <= bounding.bottom) {
-        console.log("inside close");
+        // inside
         return;
       }
-      console.log("outside close");
       e.cancelBubble = true;
       e.preventDefault();
       this.$nextTick(() => {

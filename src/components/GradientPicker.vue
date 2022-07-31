@@ -48,42 +48,34 @@
       <div 
         class="gradient-color-picker-color-container"
         >
-        <div 
-          class="gradient-color-picker-color-bg"
+        <color-picker-wrapper
+          :emitter="emitter"
+          :startColor="colors[selectedPicker]"
+          @newColor="updateColor"
           >
-          </div>
-        <div 
-          class="gradient-color-picker-color"
-          :style="{backgroundColor : colors[selectedPicker]}"
-          @pointerup="toggleColorPicker"
-          >
-        </div>
+          </color-picker-wrapper>
       </div>
-      <ColorPicker ref="colorPicker" v-if="showColorPicker" 
-        :defaultValue="pickers[selectedPicker].color"
-        :showBelow="true"
-        @closeMe="toggleColorPicker"
-        @newColorRawRgb="updateColor"></ColorPicker>
     </span>
   </div>
 </template>
 
 <script lang="ts">
+import GradientPick from "./GradientPick.vue";
+import InputField from "./InputField.vue";
+import Dropdown from "./Dropdown.vue";
+import ColorPickerWrapper from "./ColorPickerWrapper.vue";
+
 import { PropType, defineComponent } from 'vue'
 import { ColorRamp } from "../graph/nodes/ColorRamp";
 import {Emitter} from "mitt";
 import {Events} from "../graph/Manager";
 import { Gradient, Picker, Interpolation } from "../graph/nodes/Gradient";
-import GradientPick from "./GradientPick.vue";
-import ColorPicker from "./ColorPicker.vue";
-import InputField from "./InputField.vue";
-import Dropdown from "./Dropdown.vue";
 import { Color, ColorSpace } from "../graph/utils/Color";
 
 export default defineComponent({
   components: {
     GradientPick,
-    ColorPicker,
+    ColorPickerWrapper,
     InputField,
     Dropdown,
   },
@@ -91,7 +83,7 @@ export default defineComponent({
     return {
       gradient: null as null | Gradient,
       pickers: [] as Picker[],
-      colors: [] as string[],
+      colors: [] as Color[],
       selectedPicker : -1,
       showColorPicker : false,
       tempPickerPosition : "",
@@ -159,11 +151,11 @@ export default defineComponent({
     },
     genColors() {
       this.pickers.forEach((picker, idx) => {
-        this.colors[idx] = picker.color.getColorStringRgba();
+        this.colors[idx] = picker.color;
       });
     },
-    updateColor(color : [number, number, number, number]) {
-      this.pickers[this.selectedPicker].color.setRGB(color);
+    updateColor(color : Color) {
+      this.pickers[this.selectedPicker].color.clone(color);
       this.updateGradient();
       this.genColors();
       this.updateGraphNode();

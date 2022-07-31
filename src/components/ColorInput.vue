@@ -5,45 +5,29 @@
       v-if="!isConnected"
       class="shader-node-color-input-active-container"
       >
-      <span
-        class="shader-node-color-input-bg"
-        ></span>
-      <span
-        class="shader-node-color-input-active"
-        ref="inputActive"
-        :style="{backgroundColor : color}"
-        @click="togglePicker"
-        ></span>
+      <color-picker-wrapper
+        :emitter="emitter"
+        :startColor="input.getValue().value"
+        @newColor="updateColor"
+        >
+        </color-picker-wrapper>
     </span>
-    <ColorPicker ref="colorPicker" v-if="state === State.Active" 
-      :defaultValue="startValue"
-      @closeMe="togglePicker"
-      @newColorStringHsl="updateColor"></ColorPicker>
   </div>
 </template>
 
 <script lang="ts">
-import ColorPicker from "./ColorPicker.vue";
+import ColorPickerWrapper from "./ColorPickerWrapper.vue";
 import { PropType, defineComponent } from 'vue'
-import { InputNumber } from "../graph/nodes/InputNumber";
 import { ColorVariable } from "../graph/shaders/CommonShader";
+import {Color} from "../graph/utils/Color";
+import { InputNumber } from "../graph/nodes/InputNumber";
 import {Emitter} from "mitt";
 import {Events} from "../graph/Manager";
-import {Color, ColorSpace} from "../graph/utils/Color";
-
-enum State {
-  Init,
-  Active
-}
 
 export default defineComponent({
   data() {
     return {
-      color: "",
-      state: State.Init,
-      State,
       isConnected : false,
-      startValue: new Color(ColorSpace.HSV, 0, 0, 0, 0) as Color,
     };
   },
   props: {
@@ -57,40 +41,15 @@ export default defineComponent({
     },
   },
   components: {
-    ColorPicker,
+    ColorPickerWrapper,
   },
   computed: {
   },
   methods: {
-    updateColor(newColor : string) {
-      this.color = newColor;
-      //(<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.color;
-      const split = newColor.split("(");
-      const split2 = split[1].split(")");
-      const split3 = split2[0].split(",");
-      const h = parseFloat(split3[0]);
-      const s = parseFloat(split3[1]) / 100;
-      const l = parseFloat(split3[2]) / 100;
-      let a = 1;
-      if (split3.length === 4) {
-        a = parseFloat(split3[3]) / 100;
-      }
+    updateColor(newColor: Color) {
       const inputColor : ColorVariable = this.input.getValue();
-      inputColor.value.setHSL([h, s, l, a]);
-      this.startValue.clone(inputColor.value) ;
+      inputColor.value.clone(newColor);
       this.emitter.emit("recompile");
-    },
-    togglePicker(e : PointerEvent) {
-      if (this.state === State.Init) {
-        this.state = State.Active;
-        e.cancelBubble = true;
-      } else {
-        this.$nextTick(() => {
-          this.state = State.Init;
-        });
-      }
-    },
-    hidePicker() {
     },
     checkIsConnected() {
       this.isConnected = this.input.isConnected();
@@ -98,8 +57,6 @@ export default defineComponent({
   },
   mounted() {
     this.emitter.on("recompile", this.checkIsConnected);
-    this.startValue.clone(this.input.getValue().value);
-    (<HTMLElement>this.$refs.inputActive).style.backgroundColor = this.startValue.getColorStringRgba();
   },
 })
 </script>
@@ -120,19 +77,6 @@ export default defineComponent({
   width: 50px;
   height: 22px;
   position: relative;
-  border-radius: 5px;
-}
-.shader-node-color-input-bg {
-  width: 100%;
-  height: 100%;
-  background-image:
-    linear-gradient(45deg, #888 25%, transparent 25%),
-    linear-gradient(-45deg, #888 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #888 75%),
-    linear-gradient(-45deg, white 75%, #888 75%);
-  background-size: 22px 22px;
-  background-position: 0 0, 0 11px, 11px -11px, -11px 0px;
-  position: absolute;
   border-radius: 5px;
 }
 

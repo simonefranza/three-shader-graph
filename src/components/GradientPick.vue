@@ -7,14 +7,15 @@
   >
   <div
     :class="['gradient-pick', {selected: isSelected}]"
-    :style="{'background-color': color}"
+    :style="{'background-color': color.getColorStringRgba()}"
   >
   </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from 'vue';
+import { Color } from "../graph/utils/Color";
 
 export default defineComponent({
   data() {
@@ -24,7 +25,7 @@ export default defineComponent({
   },
   props: {
     color: {
-      type : String,
+      type : Color,
       required: true,
     },
     position: {
