@@ -47,6 +47,10 @@ export class ViewManager {
     this.dividerElement = dividerElement;
     this.dividerWidth = 8;
     this.layout = Layout.Adjacent;
+    addEventListener("resize", () => {
+      this.emitter.emit("resizeGraph");
+      this.emitter.emit("resizeCanvas");
+    });
     this.dividerMoveHandler = (e : PointerEvent) => this.handleDividerPointerMove(e);
     this.dividerUpHandler = () => this.handleDividerPointerUp();
     this.dividerInitialPosition = {x : 0, y : 0};
