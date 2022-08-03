@@ -91,7 +91,7 @@ export class BaseInput {
 
   setValue(value : any) {
     if (this.#value === null) {
-      throw "[BaseInput] Trying to assign value to null";
+      throw `[BaseInput (${this.#name})] Trying to assign value to null`;
     }
     this.#value.value = value;
   }

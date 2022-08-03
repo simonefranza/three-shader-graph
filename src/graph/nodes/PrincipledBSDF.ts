@@ -1,9 +1,9 @@
-import { BaseNode } from "./BaseNode";
+import { BaseNode, OutputFormat } from "./BaseNode";
 import { BaseOutput } from "./BaseOutput";
 import { BaseInput, InputVariablesMap } from "./BaseInput";
 import { VertexShader } from "../shaders/VertexShader";
 import { FragmentShader } from "../shaders/FragmentShader";
-import { ColorVariable } from "../shaders/CommonShader";
+import { ColorVariable, CommonShader } from "../shaders/CommonShader";
 import { Color, ColorSpace } from "../utils/Color";
 
 export class PrincipledBSDF extends BaseNode {
@@ -45,41 +45,65 @@ export class PrincipledBSDF extends BaseNode {
     });
   }
 
-  compile(vert: VertexShader, frag : FragmentShader): [string, string] {
-    let baseColorVarName = "";
-    let emissionColorVarName = "";
+  compileBaseColor(shader : CommonShader) : string {
     if (this.inputVariables["base-color"].isConnected()) {
       const connection : BaseOutput = this.inputVariables["base-color"].getConnected();
       const prevParent : BaseNode = connection.getParent();
-      [ baseColorVarName, ] = prevParent.compile(vert, frag);
+      const [ baseColorVarName, ] = prevParent.compile(shader, connection, OutputFormat.VECTOR_4);
+      return baseColorVarName;
     } else {
       const baseColorValue : ColorVariable =
-        this.inputVariables["base-color"].getValue();
-      baseColorVarName = vert.generateVariableID("princ_base_color_");
+      this.inputVariables["base-color"].getValue();
+      const baseColorVarName = shader.generateVariableID("princ_base_color_");
       console.log(baseColorValue, baseColorValue.value);
       const rgb = baseColorValue.value.getUnitRgb();
       const alpha = baseColorValue.value.getAlpha();
       const line : string = `vec4 ${baseColorVarName} = ${baseColorValue.type}` +
         `(${rgb.x}, ${rgb.y}, ${rgb.z}, ${alpha});`;
-      frag.addToMain(line);
+      shader.addToMain(line);
+      return baseColorVarName;
     }
+  }
+
+  compileEmissionColor(shader :CommonShader) : string {
     if (this.inputVariables["emission-color"].isConnected()) {
       const connection : BaseOutput = this.inputVariables["emission-color"].getConnected();
       const prevParent : BaseNode = connection.getParent();
-      [ emissionColorVarName, ] = prevParent.compile(vert, frag);
+      const [ varName, ] = prevParent.compile(shader, connection, OutputFormat.VECTOR_4);
+      return varName;
+
     } else {
       const emissionColorValue : ColorVariable =
         this.inputVariables["emission-color"].getValue();
       const rgb = emissionColorValue.value.getUnitRgb();
       const alpha = emissionColorValue.value.getAlpha();
-      emissionColorVarName = vert.generateVariableID("princ_emission_color_");
+      const emissionColorVarName = shader.generateVariableID("princ_emission_color_");
       const line : string = `vec4 ${emissionColorVarName} = ${emissionColorValue.type}` +
-        `(${rgb.x}, ${rgb.y}, ${rgb.z}, ${alpha});`;
-      frag.addToMain(line);
+            `(${rgb.x}, ${rgb.y}, ${rgb.z}, ${alpha});`;
+      shader.addToMain(line);
+      return emissionColorVarName;
     }
-    const princOutputID = vert.generateVariableID("princ_bsdf_");
-    const line = `vec4 ${princOutputID} = ${baseColorVarName} + ${emissionColorVarName};`;
-    frag.addToMain(line);
+  }
+
+  compile(shader: CommonShader, output: BaseOutput, format ?: OutputFormat): [string, string] {
+    const baseColorVarName = this.compileBaseColor(shader);
+    const emissionColorVarName = this.compileEmissionColor(shader);
+    const princOutputID = shader.generateVariableID("princ_bsdf_");
+    switch (format) {
+    case OutputFormat.SCALAR:
+      shader.addToMain(`float ${princOutputID} = ` +
+          `(${baseColorVarName} + ${emissionColorVarName}).x;`);
+      break;
+    case OutputFormat.VECTOR_3:
+      shader.addToMain(`vec3 ${princOutputID} = ` +
+          `(${baseColorVarName} + ${emissionColorVarName}).xyz;`);
+      break;
+    case OutputFormat.VECTOR_4:
+    default:
+      shader.addToMain(`vec4 ${princOutputID} = ` +
+        `(${baseColorVarName} + ${emissionColorVarName}).xyzw;`);
+      break;
+    }
     return [ princOutputID, "" ];
   }
 

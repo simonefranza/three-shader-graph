@@ -1,7 +1,6 @@
 import { InputList, BaseInput } from "./BaseInput";
 import { OutputList, BaseOutput } from "./BaseOutput";
-import { VertexShader } from "../shaders/VertexShader";
-import { FragmentShader } from "../shaders/FragmentShader";
+import { CommonShader } from "../shaders/CommonShader";
 
 export abstract class BaseNode {
   #name: string;
@@ -58,7 +57,16 @@ export abstract class BaseNode {
     return val.toString().includes(".") ? val : val + ".0";
   }
 
-  abstract compile(vert : VertexShader, frag : FragmentShader) : [string, string];
+  abstract compile(
+    shader: CommonShader,
+    output : BaseOutput,
+    format ?: OutputFormat) : [string, string];
+}
+
+export enum OutputFormat {
+  SCALAR,
+  VECTOR_3,
+  VECTOR_4,
 }
 
 export interface NodeList {

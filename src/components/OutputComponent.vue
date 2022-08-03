@@ -146,7 +146,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import "../assets/scss/_shader_in_out.scss";
+@import "../../public/scss/shader_in_out.scss";
 .shader-node-output-link {
   right: 0;
   transform: translate(50%, -50%);

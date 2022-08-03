@@ -15,6 +15,7 @@ ${super.compileAttributes()}
 // Varyings
 ${super.compileVaryings()}
 // Ins 
+in vec3 projPosition;
 ${super.compileIns()}
 // Outs 
 ${super.compileOuts()}

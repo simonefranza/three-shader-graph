@@ -1,15 +1,15 @@
-import { BaseNode } from "./nodes/BaseNode";
+import { OutputNode } from "./nodes/OutputNode";
 import { VertexShader } from "./shaders/VertexShader";
 import { FragmentShader } from "./shaders/FragmentShader";
 
 export class GLSLManager {
-  #startNode: BaseNode | null;
+  #startNode: OutputNode | null;
 
-  constructor(startNode: BaseNode | null) {
+  constructor(startNode: OutputNode | null) {
     this.#startNode = startNode;
   }
 
-  setStartNode(startNode: BaseNode) {
+  setStartNode(startNode: OutputNode) {
     this.#startNode = startNode;
   }
 
@@ -19,9 +19,9 @@ export class GLSLManager {
     }
     const vert = new VertexShader();
     const frag = new FragmentShader();
-    const shaders = this.#startNode.compile(vert, frag);
+    const shaders = this.#startNode.compileOutput(vert, frag);
 
-    return [shaders[0].trim(), shaders[1].trim()];
+    return [ shaders[0].trim(), shaders[1].trim() ];
   }
 
 }

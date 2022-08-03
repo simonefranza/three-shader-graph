@@ -1,11 +1,10 @@
-import { BaseNode } from "./BaseNode";
+import { BaseNode, OutputFormat } from "./BaseNode";
 import { BaseOutput } from "./BaseOutput";
 import { BaseInput, InputVariablesMap } from "./BaseInput";
 import { InputNumber } from "./InputNumber";
-import { VertexShader } from "../shaders/VertexShader";
-import { FragmentShader } from "../shaders/FragmentShader";
-import { ShaderVariable, FunctionsMap } from "../shaders/CommonShader";
+import { ShaderVariable, FunctionsMap, CommonShader } from "../shaders/CommonShader";
 import { Vector3 } from "three";
+import { OutputNode } from "./OutputNode";
 
 export class NoiseTexture extends BaseNode {
   inputVariables : InputVariablesMap;
@@ -238,7 +237,7 @@ float fbm(
   }
   //TODO add fbm functions ad hoc (https://www.shadertoy.com/view/lsl3RH) fbm1 fbm2 fbm3 ...
 
-  compile(vert: VertexShader, frag : FragmentShader): [string, string] {
+  compile(shader: CommonShader, output : BaseOutput, format ?: OutputFormat): [string, string] {
     const scaleValue : ShaderVariable =
       this.inputVariables["scale"].getValue();
     const detailValue : ShaderVariable =
@@ -254,34 +253,20 @@ float fbm(
     //  `${emissionColorVar.type}(${emissionColorVar.value.x}, ` +
     //  `${emissionColorVar.value.y}, ` +
     //  `${emissionColorVar.value.z}, ${emissionColorVar.value.w});`;
-    vert.addToOuts(<ShaderVariable>{
-      name : "projPosition",
-      type : "vec3",
-      value : new Vector3(0, 0, 0)
-    });
-    vert.addToMain("projPosition = position;");
-    //vert.addToMain(
-    //  `projPosition = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );`);
-
-    frag.addToIns(<ShaderVariable>{
-      name : "projPosition",
-      type : "vec3",
-      value : new Vector3(0, 0, 0)
-    });
     //const lines = `
-    //  gl_FragColor = vec4(vec3(distance(vec3(0.5, 0.5, 0.5),projPosition * 2.)), 1);`;
-    //frag.addToMain(lines);
-    const stVar = frag.generateVariableID("nt_st_");
-    const scaleVar = frag.generateVariableID("nt_scale_");
-    const octaveIntVar = frag.generateVariableID("nt_octave_int_");
-    const octaveFracVar = frag.generateVariableID("nt_octave_frac_");
-    const persistanceVar = frag.generateVariableID("nt_persistance_");
-    const distortionVar = frag.generateVariableID("nt_distortion_");
-    const qVar = frag.generateVariableID("nt_q_");
-    const fVar = frag.generateVariableID("nt_f_");
-    const finalColor = frag.generateVariableID("nt_color_");
-    frag.addAllToFunctions(this.noiseFunction);
-    frag.addToMain(`
+    //  gl_shaderColor = vec4(vec3(distance(vec3(0.5, 0.5, 0.5),projPosition * 2.)), 1);`;
+    //shader.addToMain(lines);
+    const stVar = shader.generateVariableID("nt_st_");
+    const scaleVar = shader.generateVariableID("nt_scale_");
+    const octaveIntVar = shader.generateVariableID("nt_octave_int_");
+    const octaveFracVar = shader.generateVariableID("nt_octave_frac_");
+    const persistanceVar = shader.generateVariableID("nt_persistance_");
+    const distortionVar = shader.generateVariableID("nt_distortion_");
+    const qVar = shader.generateVariableID("nt_q_");
+    const fVar = shader.generateVariableID("nt_f_");
+    const finalColor = shader.generateVariableID("nt_out_");
+    shader.addAllToFunctions(this.noiseFunction);
+    shader.addToMain(`
     vec3 ${stVar} = projPosition;
     // Scale the space in order to see the function
     float ${scaleVar} = ${super.formatValue(scaleValue.value)};
@@ -320,9 +305,19 @@ float fbm(
       ${stVar} + ${distortionVar} * ${qVar},
       ${persistanceVar},
       ${scaleVar}
-    );
-
-    vec4 ${finalColor} = vec4(vec3(${fVar}), 1);`);
+    );`);
+    switch (format) {
+    case OutputFormat.SCALAR:
+      shader.addToMain(`float ${finalColor} = ${fVar};`);
+      break;
+    case OutputFormat.VECTOR_3:
+      shader.addToMain(`vec3 ${finalColor} = vec3(${fVar});`);
+      break;
+    case OutputFormat.VECTOR_4:
+    default:
+      shader.addToMain(`vec4 ${finalColor} = vec4(vec3(${fVar}), 1);`);
+      break;
+    }
     return [ finalColor, "" ];
   }
 
