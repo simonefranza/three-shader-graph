@@ -1,0 +1,31 @@
+.shader-node-output-link,
+.shader-node-input-link {
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  top: 50%;
+  background: black;
+  outline: 1px solid #111;
+  border-radius: 10px;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.shader-node-output-link.color,
+.shader-node-input-link.color {
+  background: #bfbf27;
+}
+.shader-node-output-link.number,
+.shader-node-input-link.number {
+  background: lightslategrey;
+}
+.shader-node-output-link.shader,
+.shader-node-input-link.shader {
+  background: forestgreen;
+}
+.shader-node-output-link.displacement,
+.shader-node-input-link.displacement{
+  background: mediumpurple;
+}
+
+
