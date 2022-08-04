@@ -4,6 +4,7 @@ import { OutputNode } from "./OutputNode";
 import { PrincipledBSDF } from "./PrincipledBSDF";
 import { NoiseTexture } from "./NoiseTexture";
 import { ColorRamp } from "./ColorRamp";
+import { VoronoiTexture } from "./VoronoiTexture";
 
 export interface NodesListElement {
   name : string,
@@ -14,20 +15,24 @@ export class NodesList {
   static getNodesList() : NodesListElement[] {
     return [
       {
-        name: "Material Output",
-        class: OutputNode,
+        name : "Material Output",
+        class : OutputNode,
       },
       {
-        name: "Principled BSDF",
-        class: PrincipledBSDF,
+        name : "Principled BSDF",
+        class : PrincipledBSDF,
       },
       {
-        name: "Noise Texture",
-        class: NoiseTexture,
+        name : "Noise Texture",
+        class : NoiseTexture,
       },
       {
-        name: "Color Ramp",
-        class: ColorRamp,
+        name : "Voronoi Texture",
+        class : VoronoiTexture,
+      },
+      {
+        name : "Color Ramp",
+        class : ColorRamp,
       },
     ];
   }

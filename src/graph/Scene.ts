@@ -92,6 +92,7 @@ export class Scene {
     const [ vert, frag ] = [ "", "" ];
 
     const geometry = new THREE.SphereGeometry( 1, 124, 124);
+    //const geometry = new THREE.BoxGeometry( 1, 1, 1);
     const material = new THREE.ShaderMaterial( {
       vertexShader : vert,
       fragmentShader : frag
@@ -125,7 +126,7 @@ export class Scene {
 
   updateShaders([ vertShader, fragShader ] : [string, string]) {
     const material = <THREE.ShaderMaterial> this.mesh.material;
-    console.log(fragShader, vertShader);
+    //console.log(fragShader, vertShader);
     this.shaders.fragment = fragShader;
     this.shaders.vertex = vertShader;
     material.fragmentShader = fragShader;

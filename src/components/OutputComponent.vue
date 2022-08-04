@@ -58,6 +58,7 @@ export default defineComponent({
           throw "[OutputComponent] is busy, how is pointer down?";
         case State.Linked:
           console.log("create new ray, and eventually pop open menu");
+          this.handlePointerDownOpen(e);
           break;
         default: 
           throw "[OutputComponent::handlePointerDown] case not implemented? " + this.state;
