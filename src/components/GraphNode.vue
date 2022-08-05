@@ -2,12 +2,6 @@
   <span class="">
     <div class="shader-node-title">{{title}}</div>
     <div class="shader-node-body">
-      <div v-if ="baseNode instanceof colorRamp" class="shader-node-additional">
-        <GradientPicker
-          :baseNode="baseNode"
-          :emitter="emitter"
-        ></GradientPicker>
-      </div>
       <div
         v-for="output in outputs"
         :key="output.getName()"
@@ -18,6 +12,18 @@
           :renderer="renderer"
           :emitter="emitter"
         ></output-component>
+      </div>
+      <div v-if ="baseNode instanceof colorRamp" class="shader-node-additional">
+        <GradientPicker
+          :baseNode="baseNode"
+          :emitter="emitter"
+        ></GradientPicker>
+      </div>
+      <div v-else-if ="baseNode instanceof voronoiTexture" class="shader-node-additional">
+        <VoronoiExtra
+          :baseNode="baseNode"
+          :emitter="emitter"
+        ></VoronoiExtra>
       </div>
       <div
         v-for="input in inputs"
@@ -42,20 +48,24 @@ import { BaseOutput } from "../graph/nodes/BaseOutput";
 import { BaseInput } from "../graph/nodes/BaseInput";
 import { BaseNode } from "../graph/nodes/BaseNode";
 import { ColorRamp } from "../graph/nodes/ColorRamp";
+import { VoronoiTexture } from "../graph/nodes/VoronoiTexture";
 import { RendererNode } from "../graph/renderer/RendererNode";
 import InputComponent from "./InputComponent.vue";
 import OutputComponent from "./OutputComponent.vue";
 import GradientPicker from "./GradientPicker.vue";
+import VoronoiExtra from "./VoronoiExtra.vue";
 
 export default defineComponent({
   components: {
     InputComponent,
     OutputComponent,
     GradientPicker,
+    VoronoiExtra,
   },
   data() {
     return {
       colorRamp : ColorRamp,
+      voronoiTexture: VoronoiTexture,
     };
   },
   props: {

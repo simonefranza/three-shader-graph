@@ -2,8 +2,6 @@ import { BaseNode, OutputFormat } from "./BaseNode";
 import { BaseOutput } from "./BaseOutput";
 import { BaseInput, InputVariablesMap } from "./BaseInput";
 import { InputNumber } from "./InputNumber";
-import { VertexShader } from "../shaders/VertexShader";
-import { FragmentShader } from "../shaders/FragmentShader";
 import { CommonShader, ShaderVariable } from "../shaders/CommonShader";
 import { Gradient, Picker, Interpolation } from "./Gradient";
 import { Color, ColorSpace } from "../utils/Color";

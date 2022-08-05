@@ -9,6 +9,10 @@ export class VoronoiTexture extends BaseNode {
 
   noiseFunction : FunctionsMap;
 
+  featureOutput : FeatureOutput;
+
+  smoothness: number;
+
   constructor() {
     super(
       "Voronoi Texture",
@@ -18,6 +22,14 @@ export class VoronoiTexture extends BaseNode {
           "number",
           5
         ),
+        // from 0 to 1
+        //new InputNumber(
+        //  "smoothness",
+        //  "number",
+        //  0.5,
+        //  0,
+        //  5
+        //),
         // from 0 to 1
         new InputNumber(
           "randomness",
@@ -34,6 +46,8 @@ export class VoronoiTexture extends BaseNode {
     list.forEach((input : BaseInput) => {
       this.inputVariables[input.getName()] = input;
     });
+    this.featureOutput = FeatureOutput.F1;
+    this.smoothness = 0.5;
 
     this.noiseFunction = {
       "hash(vec3)" :
@@ -44,9 +58,11 @@ export class VoronoiTexture extends BaseNode {
 
 }`,
       "voronoi(vec3)" :
-      `vec3 voronoi( const in vec3 x, float randomness ) {
+      `vec3 voronoi( const in vec3 x, float randomness) {
+      //vec3 voronoi( const in vec3 x, float randomness, float smoothness ) {
     vec3 p = floor( x );
     vec3 f = fract( x );
+    //float w = smoothness;
 
     float id = 0.0;
     vec2 res = vec2( 100.0 );
@@ -56,11 +72,16 @@ export class VoronoiTexture extends BaseNode {
                 vec3 b = vec3( float(i), float(j), float(k) );
                 vec3 r = vec3( b ) - f + randomness * hash( p + b );
                 float d = dot( r, r );
+                //float h = smoothstep( -1.0, 1.0, (res.x-d)/w );
+                //float newD = mix( res.x, d, h ) - h*(1.0-h)*w/(1.0+3.0*w);
 
+                //if( newD < res.x ) {
                 if( d < res.x ) {
                     id = dot( p+b, vec3(1.0,57.0,113.0 ) );
+                    //res = vec2( newD, res.x );         
                     res = vec2( d, res.x );         
                 }
+                //else if( newD < res.y ) {
                 else if( d < res.y ) {
                     res.y = d;
                 }
@@ -263,13 +284,52 @@ return sqrt(d11.xy); // F1, F2
     };
   }
 
+  setFeatureOutput(fOut : FeatureOutput) {
+    this.featureOutput = fOut;
+  }
+
+  getFeatureOutput() : FeatureOutput {
+    return this.featureOutput;
+  }
+
+  compileF1F2(shader : CommonShader, outVN : string,
+      noiseVN : string, format ?: OutputFormat) {
+    let coord = "";
+    switch (this.featureOutput) {
+    //case FeatureOutput.SMOOTH_F1:
+    case FeatureOutput.F1:
+      coord = "x";
+      break;
+    case FeatureOutput.F2:
+      coord = "y";
+      break;
+    default:
+      throw "[VoronoiTexture:compileF1F2] Invalid FeatureOutput: " + this.featureOutput;
+    }
+    switch (format) {
+    case OutputFormat.SCALAR:
+      shader.addToMain(`float ${outVN} = ${noiseVN}.${coord};`);
+      break;
+    case OutputFormat.VECTOR_3:
+      shader.addToMain(`vec3 ${outVN} = vec3(${noiseVN}.${coord});`);
+      break;
+    case OutputFormat.VECTOR_4:
+    default:
+      shader.addToMain(`vec4 ${outVN} = vec4(vec3(${noiseVN}.${coord}), 1);`);
+      break;
+    }
+  }
+
   compile(shader: CommonShader, output : BaseOutput, format ?: OutputFormat): [string, string] {
     const scaleValue : ShaderVariable =
       this.inputVariables["scale"].getValue();
     const randomnessValue : ShaderVariable =
       this.inputVariables["randomness"].getValue();
+    //const smoothnessValue : ShaderVariable =
+    //  this.inputVariables["smoothness"].getValue();
     const noiseVN = shader.generateVariableID("vt_noise_");
     const randomnessVN = shader.generateVariableID("nt_rand_");
+    //const smoothnessVN = shader.generateVariableID("nt_smooth_");
     const scaleVN = shader.generateVariableID("nt_scale_");
     const finalColor = shader.generateVariableID("vt_out_");
     shader.addAllToFunctions(this.noiseFunction);
@@ -279,20 +339,33 @@ return sqrt(d11.xy); // F1, F2
       `${super.formatValue(scaleValue.value)};`);
     //    shader.addToMain(`vec2 ${noiseVN} = cellular(projPosition * ` +
     //        `${scaleVN}, ${randomnessVN});`);
-    shader.addToMain(`vec3 ${noiseVN} = voronoi(projPosition * ${scaleVN}, ${randomnessVN});`);
-    switch (format) {
-    case OutputFormat.SCALAR:
-      shader.addToMain(`float ${finalColor} = ${noiseVN}.x;`);
+    switch (this.featureOutput) {
+    case FeatureOutput.F1:
+    case FeatureOutput.F2:
+      shader.addToMain(`vec3 ${noiseVN} = ` +
+          //`voronoi(projPosition * ${scaleVN}, ${randomnessVN}, 0.0);`);
+          `voronoi(projPosition * ${scaleVN}, ${randomnessVN});`);
+      this.compileF1F2(shader, finalColor, noiseVN, format);
       break;
-    case OutputFormat.VECTOR_3:
-      shader.addToMain(`vec3 ${finalColor} = vec3(${noiseVN}.x);`);
-      break;
-    case OutputFormat.VECTOR_4:
+    //case FeatureOutput.SMOOTH_F1:
+    //  shader.addToMain(`const float ${smoothnessVN} = ` +
+    //    `${super.formatValue(smoothnessValue.value)};`);
+    //  shader.addToMain(`vec3 ${noiseVN} = ` +
+    //      `voronoi(projPosition * ${scaleVN}, ` +
+    //      //`${randomnessVN}, ${super.formatValue(smoothnessValue.value)});`);
+    //      `${randomnessVN});`);
+    //  this.compileF1F2(shader, finalColor, noiseVN, format);
+    //  break;
     default:
-      shader.addToMain(`vec4 ${finalColor} = vec4(vec3(${noiseVN}.x), 1);`);
-      break;
+      throw "[VoronoiTexture:compile] Invalid FeatureOutput: " + this.featureOutput;
     }
     return [ finalColor, "" ];
   }
 
+}
+
+export enum FeatureOutput {
+  F1,
+  F2,
+  //SMOOTH_F1,
 }
